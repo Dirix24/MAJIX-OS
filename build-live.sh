@@ -31,7 +31,7 @@ lb config \
     --iso-application 'MAJIX OS 0.1 Alpha' \
     --checksums sha256 \
     --chroot-squashfs-compression-type zstd \
-    --bootappend-live 'boot=live components quiet splash hostname=majix username=majix locales=es_ES.UTF-8 nox11autologin'
+    --bootappend-live 'boot=live components quiet splash hostname=majix username=majix locales=es_ES.UTF-8 nox11autologin persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=lukslabel persistence-label=MAJIX_DATA'
 
 mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
     config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib \

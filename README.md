@@ -2,17 +2,38 @@
 
 ![Logotipo de MAJIX OS](branding/logo.png)
 
-**MAJIX OS 0.1 Alpha** es una distribución Live para equipos AMD64, basada en Debian 13. Arranca con KDE Plasma en español, usa Wayland e incluye Firefox ESR, Konsole y Kate.
+**MAJIX OS 0.1 Alpha** es una distribución Live para equipos AMD64, basada en Debian 13. Nace como un entorno portátil para aprender, programar y experimentar. Puedes probarla desde una ISO en una máquina virtual o arrancarla desde un medio externo.
 
-## Probar la alfa
+La alfa incluye KDE Plasma en español con Wayland y XWayland, red con NetworkManager, sonido con PipeWire y aplicaciones como Firefox ESR, Konsole y Kate. La animación de arranque lo gestiona Plymouth, que muestra el logotipo de MAJIX OS con un indicador animado.
 
-1. Descarga el [ZIP con la ISO](https://github.com/Dirix24/MAJIX-OS/actions/runs/45709947410/artifacts/15067627889) y extráelo. Puedes comprobar la imagen con `sha256sum -c SHA256SUMS`.
-2. Monta la ISO como unidad óptica en una máquina virtual de 64 bits. Para arrancar en UEFI, desactiva Secure Boot en la máquina virtual.
-3. Selecciona **Live system**. La sesión es temporal y los cambios se pierden al reiniciar.
+## Descargar y probar
 
-La entrada opcional [Persistencia cifrada (USB)](docs/persistencia.md) está pensada para conservar la carpeta personal en un volumen LUKS2 preparado. Se han verificado el arranque Live y la animación en QEMU. La conservación de archivos tras reiniciar sigue pendiente de una prueba completa. El instalador Johnny está en la [hoja de ruta](docs/especificacion.md#24-hoja-de-ruta).
+1. Abre [GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml), entra en la ejecución exitosa más reciente y descarga el artefacto **majix-os-0.1-alpha-amd64**.
+2. Extrae el ZIP. Si tienes `sha256sum`, ejecuta `sha256sum -c SHA256SUMS` en la carpeta extraída para verificar la ISO.
+3. Monta la ISO como unidad óptica de una máquina virtual AMD64. Para arrancar en UEFI, desactiva Secure Boot en la máquina virtual.
+4. En el menú, selecciona **Live system** para usar el modo predeterminado o **MAJIX OS - Sesion temporal (sin guardar)** para una sesión desechable.
 
-## Compilar desde el código fuente
+## Qué se guarda al reiniciar
+
+**La persistencia está activada por defecto en Live system.** Para guardar cambios necesitas una memoria USB con un volumen cifrado LUKS2 preparado. La ISO contiene el sistema base y el USB recibe los cambios que hayas decidido conservar.
+
+| Modo | Qué conserva |
+| --- | --- |
+| **Guardar el sistema y mis archivos** | Documentos, configuraciones y paquetes que instales durante la sesión Live. |
+| **Reiniciar limpio y guardar mis archivos** | Todo lo que guardes en tu carpeta personal. El resto de los cambios de la sesión Live se descarta. |
+| **Sesión temporal** | Los cambios de la sesión se guardan en memoria y se pierden al reiniciar. |
+
+Seleccionas uno de los dos perfiles persistentes al preparar el USB. Si arrancas solo con la ISO, los cambios quedan en memoria temporal. Reiniciar no formatea ningún disco. [Guía para preparar el USB y comprobar el guardado](docs/persistencia.md).
+
+## Estado del proyecto
+
+- **Disponible en la alfa:** arranque Live AMD64, KDE Plasma, animación con el logotipo y configuración de persistencia cifrada por USB.
+- **Verificación:** GitHub Actions comprueba la suma de la ISO, las entradas BIOS y UEFI y el arranque Live en QEMU. La prueba de escritura y lectura en un USB cifrado después de reiniciar sigue pendiente.
+- **Instalación:** Johnny, el instalador del proyecto, está previsto en la hoja de ruta. La selección entre conservar todos los cambios y conservar solo la carpeta personal se configura hoy en el USB Live.
+
+Consulta la [especificación y la hoja de ruta](docs/especificacion.md#24-hoja-de-ruta).
+
+## Compilar la ISO
 
 En Debian 13 AMD64, ejecuta desde la raíz del repositorio:
 
@@ -22,7 +43,7 @@ sudo apt-get install live-build ca-certificates rsync
 sudo bash build-live.sh dist
 ```
 
-La ISO y su suma SHA-256 se guardan en `dist/`. Las compilaciones automáticas están en [GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml).
+La compilación guarda la ISO y su suma SHA-256 en `dist/`.
 
 ## Autoría y licencia
 
