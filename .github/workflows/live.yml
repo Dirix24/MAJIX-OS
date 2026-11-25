@@ -46,7 +46,7 @@ jobs:
             -extract /boot/grub/grub.cfg grub-live.cfg
           for menu in syslinux-live.cfg grub-live.cfg; do
             grep -F 'Sesion temporal (sin guardar)' "$menu"
-            grep -m 1 -E '^[[:space:]]+(append|linux)[[:space:]]' "$menu" \
+            grep -m 1 -E '^[[:space:]]+(append|linux)[[:space:]].*boot=live' "$menu" \
               | grep -F 'persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=lukslabel persistence-label=MAJIX_DATA'
             grep -F 'nopersistence' "$menu" | grep -vF 'persistence-encryption='
           done
