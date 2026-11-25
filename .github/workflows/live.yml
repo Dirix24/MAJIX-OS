@@ -32,11 +32,40 @@ jobs:
         run: |
           sha256sum -c SHA256SUMS
           sudo apt-get update
-          sudo apt-get install -y xorriso
+          sudo apt-get install -y xorriso qemu-system-x86
           xorriso -indev majix-os-0.1-alpha-amd64.iso -report_el_torito plain > boot-report.txt
           cat boot-report.txt
           grep -E 'El Torito boot img .*BIOS' boot-report.txt
           grep -E 'El Torito boot img .*UEFI' boot-report.txt
+      - name: Boot the live system in QEMU
+        working-directory: ${{ runner.temp }}/majix
+        run: |
+          mkdir boot
+          xorriso -osirrox on -indev majix-os-0.1-alpha-amd64.iso \
+            -extract_l /live boot '/live/vmlinuz-*' '/live/initrd.img-*'
+          kernels=(boot/vmlinuz-*)
+          initrds=(boot/initrd.img-*)
+          test "${#kernels[@]}" -eq 1
+          test "${#initrds[@]}" -eq 1
+          touch boot.log
+
+          qemu-system-x86_64 -machine accel=kvm:tcg -m 3072 -smp 2 -nic none \
+            -cdrom majix-os-0.1-alpha-amd64.iso -display none -monitor none \
+            -serial file:boot.log -no-reboot \
+            -kernel "${kernels[0]}" -initrd "${initrds[0]}" \
+            -append 'boot=live components hostname=majix username=majix locales=en_US.UTF-8 nox11autologin console=ttyS0' &
+          vm=$!
+          trap 'kill "$vm" 2>/dev/null || true' EXIT
+          for ((attempt = 0; attempt < 90; attempt++)); do
+            if grep -q 'majix login:' boot.log; then
+              tail -30 boot.log
+              exit 0
+            fi
+            kill -0 "$vm" 2>/dev/null || break
+            sleep 2
+          done
+          tail -100 boot.log
+          exit 1
       - uses: actions/upload-artifact@v4
         with:
           name: majix-os-0.1-alpha-amd64

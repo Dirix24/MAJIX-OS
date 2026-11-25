@@ -30,10 +30,10 @@ lb config \
     --iso-application 'MAJIX OS 0.1 Alpha' \
     --checksums sha256 \
     --chroot-squashfs-compression-type zstd \
-    --bootappend-live 'boot=live components hostname=majix username=majix locales=es_ES.UTF-8'
+    --bootappend-live 'boot=live components hostname=majix username=majix locales=es_ES.UTF-8 nox11autologin'
 
 mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
-    config/includes.chroot/usr/lib
+    config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib
 cat > config/package-lists/majix.list.chroot <<'PACKAGES'
 kde-plasma-desktop
 kwin-wayland
@@ -58,6 +58,12 @@ ColorScheme=BreezeDark
 [KDE]
 LookAndFeelPackage=org.kde.breezedark.desktop
 KDE
+
+cat > config/includes.chroot/etc/sddm.conf.d/50-majix-live.conf <<'SDDM'
+[Autologin]
+User=majix
+Session=plasma.desktop
+SDDM
 
 # Install alongside Debian's release metadata to keep package detection intact.
 cat > config/includes.chroot/usr/lib/majix-release <<'RELEASE'
