@@ -19,8 +19,8 @@ printf 'Directorio de compilación: %s\n' "$build"
 lb config \
     --ignore-system-defaults \
     --distribution trixie \
-    --architectures amd64 \
-    --binary-images iso-hybrid \
+    --architecture amd64 \
+    --binary-image iso-hybrid \
     --bootloaders 'syslinux grub-efi' \
     --uefi-secure-boot disable \
     --debian-installer none \
