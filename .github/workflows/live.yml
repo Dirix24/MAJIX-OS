@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build with Debian 13 live-build
         run: |
+          mkdir -p "$RUNNER_TEMP/majix"
           docker run --rm --privileged \
             --mount "type=bind,source=$PWD,target=/src,readonly" \
             --mount "type=bind,source=$RUNNER_TEMP,target=/out" \
