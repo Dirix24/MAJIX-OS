@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - build-live.sh
+      - branding/plymouth/**
+      - tests/check-boot-logo.py
       - .github/workflows/live.yml
   workflow_dispatch:
 
@@ -67,6 +69,8 @@ jobs:
           done
           tail -100 boot.log
           exit 1
+      - name: Check the MAJIX logo during boot in QEMU
+        run: python3 tests/check-boot-logo.py "$RUNNER_TEMP/majix/majix-os-0.1-alpha-amd64.iso" "$RUNNER_TEMP/majix/boot-logo.ppm"
       - uses: actions/upload-artifact@v4
         with:
           name: majix-os-0.1-alpha-amd64
@@ -74,5 +78,6 @@ jobs:
             ${{ runner.temp }}/majix/majix-os-0.1-alpha-amd64.iso
             ${{ runner.temp }}/majix/SHA256SUMS
             ${{ runner.temp }}/majix/boot-report.txt
+            ${{ runner.temp }}/majix/boot-logo.ppm
           compression-level: 0
           if-no-files-found: error

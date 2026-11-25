@@ -11,6 +11,7 @@ if [[ $(dpkg --print-architecture) != amd64 ]]; then
     exit 1
 fi
 
+source_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 output=$(realpath -m -- "${1:-dist}")
 build=$(mktemp -d "${TMPDIR:-/tmp}/majix-live.XXXXXXXX")
 cd "$build"
@@ -30,10 +31,11 @@ lb config \
     --iso-application 'MAJIX OS 0.1 Alpha' \
     --checksums sha256 \
     --chroot-squashfs-compression-type zstd \
-    --bootappend-live 'boot=live components hostname=majix username=majix locales=es_ES.UTF-8 nox11autologin'
+    --bootappend-live 'boot=live components quiet splash hostname=majix username=majix locales=es_ES.UTF-8 nox11autologin'
 
 mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
-    config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib
+    config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib \
+    config/includes.chroot/usr/share/plymouth/themes/majix config/hooks/live
 cat > config/package-lists/majix.list.chroot <<'PACKAGES'
 kde-plasma-desktop
 kwin-wayland
@@ -46,6 +48,7 @@ firefox-esr
 network-manager
 plasma-nm
 pipewire-audio
+plymouth-themes
 plasma-pa
 locales
 sudo
@@ -76,6 +79,26 @@ VERSION="0.1 Alpha"
 VERSION_CODENAME=alpha
 DEBIAN_CODENAME=trixie
 RELEASE
+
+install -m 0644 "$source_dir/branding/plymouth/"{majix.plymouth,watermark.png} \
+    config/includes.chroot/usr/share/plymouth/themes/majix/
+
+cat > config/hooks/live/9000-majix-plymouth.hook.chroot <<'PLYMOUTH'
+#!/bin/sh
+set -eu
+
+themes=/usr/share/plymouth/themes
+for image in "$themes/spinner/"*.png; do
+    [ "${image##*/}" != watermark.png ] || continue
+    cp -- "$image" "$themes/majix/"
+done
+
+# Load the virtual GPU early enough for the graphical splash in QEMU.
+printf '\nvirtio_gpu\n' >> /etc/initramfs-tools/modules
+plymouth-set-default-theme majix
+update-initramfs -u -k all
+PLYMOUTH
+chmod +x config/hooks/live/9000-majix-plymouth.hook.chroot
 
 lb build
 image=majix-os-0.1-alpha-amd64.hybrid.iso
