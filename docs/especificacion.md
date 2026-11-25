@@ -1040,6 +1040,13 @@ Implementar persistencia cifrada, selección de destinos de almacenamiento y pro
 
 Desarrollar Johnny Installer y el asistente de perfiles de trabajo.
 
+Al configurar el almacenamiento en Johnny, ofrecer dos opciones:
+
+- **Conservar todo (predeterminada).** Guardar archivos, ajustes, aplicaciones instaladas y cambios del sistema entre reinicios.
+- **Restaurar el sistema al reiniciar.** Arrancar desde una base de solo lectura y conservar únicamente los datos y las carpetas seleccionadas como persistentes. Descartar la capa temporal de la sesión al reiniciar, sin reformatear el disco ni el volumen persistente.
+
+Antes de aplicar la configuración, mostrar el destino de cada opción y qué datos se conservarán al reiniciar.
+
 ### Fase 4: modularidad
 
 Desarrollar Michi y los primeros módulos tecnológicos.
