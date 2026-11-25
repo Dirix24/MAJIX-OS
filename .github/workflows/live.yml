@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - build-live.sh
+      - config/**
       - branding/plymouth/**
       - tests/check-boot-logo.py
       - .github/workflows/live.yml
@@ -35,11 +36,19 @@ jobs:
         run: |
           sha256sum -c SHA256SUMS
           sudo apt-get update
-          sudo apt-get install -y xorriso qemu-system-x86
+          sudo apt-get install -y --no-install-recommends xorriso qemu-system-x86 initramfs-tools-core
           xorriso -indev majix-os-0.1-alpha-amd64.iso -report_el_torito plain > boot-report.txt
           cat boot-report.txt
           grep -E 'El Torito boot img .*BIOS' boot-report.txt
           grep -E 'El Torito boot img .*UEFI' boot-report.txt
+          xorriso -osirrox on -indev majix-os-0.1-alpha-amd64.iso \
+            -extract /isolinux/live.cfg syslinux-live.cfg \
+            -extract /boot/grub/grub.cfg grub-live.cfg
+          for menu in syslinux-live.cfg grub-live.cfg; do
+            grep -F 'Persistencia cifrada (USB)' "$menu"
+            grep -F 'persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=lukslabel persistence-label=MAJIX_DATA' "$menu"
+            test "$(grep -c 'persistence-encryption=' "$menu")" -eq 1
+          done
       - name: Boot the live system in QEMU
         working-directory: ${{ runner.temp }}/majix
         run: |
@@ -50,6 +59,9 @@ jobs:
           initrds=(boot/initrd.img-*)
           test "${#kernels[@]}" -eq 1
           test "${#initrds[@]}" -eq 1
+          lsinitramfs "${initrds[0]}" > initramfs-files.txt
+          grep -E '^(usr/)?sbin/cryptsetup$' initramfs-files.txt
+          grep -E '(^|/)dm-crypt\.ko(\.[[:alnum:]]+)?$' initramfs-files.txt
           touch boot.log
 
           qemu-system-x86_64 -machine accel=kvm:tcg -m 3072 -smp 2 -nic none \

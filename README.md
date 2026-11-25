@@ -5,7 +5,7 @@ Este documento recoge la especificación y la hoja de ruta del proyecto.
 
 ## MAJIX OS 0.1 Alpha
 
-La primera imagen es una sesión Live para AMD64 basada en Debian 13. Incluye KDE Plasma, Wayland, XWayland, NetworkManager, PipeWire, Firefox ESR, Konsole y Kate. La sesión arranca en español y los cambios se pierden al reiniciar. El instalador Johnny y la persistencia cifrada corresponden a hitos posteriores. Para arrancar en UEFI, desactiva Secure Boot en la máquina de pruebas.
+La primera imagen es una sesión Live para AMD64 basada en Debian 13. Incluye KDE Plasma, Wayland, XWayland, NetworkManager, PipeWire, Firefox ESR, Konsole y Kate. La sesión arranca en español. Por defecto, los cambios se pierden al reiniciar. La entrada opcional de [persistencia cifrada por USB](docs/persistencia.md) permite conservar la carpeta personal en un volumen LUKS2 preparado. El instalador Johnny corresponde a un hito posterior. Para arrancar en UEFI, desactiva Secure Boot en la máquina de pruebas.
 
 Descarga el artefacto `majix-os-0.1-alpha-amd64` de una [ejecución exitosa de GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml). Extrae el ZIP y comprueba la imagen con `sha256sum -c SHA256SUMS`. Para probarla, monta la ISO como unidad óptica en una máquina virtual AMD64.
 

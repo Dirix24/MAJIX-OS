@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+. ../config/binary
+options="persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=lukslabel persistence-label=MAJIX_DATA"
+
+test -s isolinux/live.cfg
+test -s boot/grub/grub.cfg
+test -s live/vmlinuz
+test -s live/initrd.img
+
+cat >> isolinux/live.cfg <<SYSLINUX
+
+label majix-persistent
+    menu label MAJIX OS - Persistencia cifrada (USB)
+    linux /live/vmlinuz
+    initrd /live/initrd.img
+    append ${LB_BOOTAPPEND_LIVE} ${options}
+SYSLINUX
+
+cat >> boot/grub/grub.cfg <<GRUB
+
+menuentry "MAJIX OS - Persistencia cifrada (USB)" {
+    linux /live/vmlinuz ${LB_BOOTAPPEND_LIVE} ${options}
+    initrd /live/initrd.img
+}
+GRUB

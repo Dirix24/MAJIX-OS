@@ -36,7 +36,8 @@ lb config \
 mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
     config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib \
     config/includes.chroot/usr/share/plymouth/themes/majix \
-    config/includes.chroot/etc/initramfs-tools/hooks config/hooks/live
+    config/includes.chroot/etc/initramfs-tools/hooks \
+    config/includes.chroot/etc/cryptsetup-initramfs config/hooks/live
 cat > config/package-lists/majix.list.chroot <<'PACKAGES'
 kde-plasma-desktop
 kwin-wayland
@@ -50,6 +51,7 @@ network-manager
 plasma-nm
 pipewire-audio
 plymouth-themes
+cryptsetup-initramfs
 plasma-pa
 locales
 sudo
@@ -117,6 +119,10 @@ plymouth-set-default-theme majix
 update-initramfs -u -k all
 PLYMOUTH
 chmod +x config/hooks/live/9000-majix-plymouth.hook.chroot
+
+install -m 0755 "$source_dir/config/persistence-menu.hook.binary" \
+    config/hooks/live/9010-majix-persistence.hook.binary
+printf '%s\n' 'CRYPTSETUP=y' > config/includes.chroot/etc/cryptsetup-initramfs/conf-hook
 
 lb build
 image=majix-os-0.1-alpha-amd64.hybrid.iso
