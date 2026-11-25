@@ -35,7 +35,8 @@ lb config \
 
 mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
     config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib \
-    config/includes.chroot/usr/share/plymouth/themes/majix config/hooks/live
+    config/includes.chroot/usr/share/plymouth/themes/majix \
+    config/includes.chroot/etc/initramfs-tools/hooks config/hooks/live
 cat > config/package-lists/majix.list.chroot <<'PACKAGES'
 kde-plasma-desktop
 kwin-wayland
@@ -83,6 +84,23 @@ RELEASE
 install -m 0644 "$source_dir/branding/plymouth/"{majix.plymouth,watermark.png} \
     config/includes.chroot/usr/share/plymouth/themes/majix/
 
+cat > config/includes.chroot/etc/initramfs-tools/hooks/majix-logo <<'INITRAMFS'
+#!/bin/sh
+set -eu
+
+if [ "${1:-}" = prereqs ]; then
+    printf '%s\n' plymouth
+    exit 0
+fi
+
+# Debian's Plymouth hook substitutes its own watermark for two-step themes.
+theme=/usr/share/plymouth/themes/majix
+if [ -d "${DESTDIR}${theme}" ]; then
+    cp -- "${theme}/watermark.png" "${DESTDIR}${theme}/watermark.png"
+fi
+INITRAMFS
+chmod +x config/includes.chroot/etc/initramfs-tools/hooks/majix-logo
+
 cat > config/hooks/live/9000-majix-plymouth.hook.chroot <<'PLYMOUTH'
 #!/bin/sh
 set -eu
@@ -93,8 +111,8 @@ for image in "$themes/spinner/"*.png; do
     cp -- "$image" "$themes/majix/"
 done
 
-# Load the virtual GPU early enough for the graphical splash in QEMU.
-printf '\nvirtio_gpu\n' >> /etc/initramfs-tools/modules
+# Load the virtual display drivers early enough for the graphical splash in QEMU.
+printf '\nvirtio_gpu\nbochs\n' >> /etc/initramfs-tools/modules
 plymouth-set-default-theme majix
 update-initramfs -u -k all
 PLYMOUTH

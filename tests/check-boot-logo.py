@@ -1,4 +1,4 @@
-"""Boot the ISO from its BIOS menu and look for the MAJIX logo in the VM."""
+"""Boot the ISO from its BIOS menu and look for the animated MAJIX logo."""
 import json
 from pathlib import Path
 import socket
@@ -27,12 +27,12 @@ def check_logo(iso, screenshot):
         vm = subprocess.Popen([
             "qemu-system-x86_64", "-machine", "accel=kvm:tcg",
             "-m", "3072", "-smp", "2", "-nic", "none",
-            "-vga", "virtio", "-display", "none", "-serial", "none",
+            "-vga", "std", "-display", "none", "-serial", "none",
             "-boot", "d", "-cdrom", str(iso), "-no-reboot",
             "-qmp", f"unix:{monitor},server=on,wait=off",
         ])
         try:
-            deadline = time.monotonic() + 120
+            deadline = time.monotonic() + 210
             while not monitor.exists():
                 if vm.poll() is not None or time.monotonic() >= deadline:
                     raise RuntimeError("QEMU did not start")
@@ -44,7 +44,7 @@ def check_logo(iso, screenshot):
                     json.loads(stream.readline())
                     execute(stream, "qmp_capabilities")
                     time.sleep(4)
-                    # The default Syslinux menu entry starts the Live environment.
+                    # Select the default Live entry in Syslinux.
                     for attempt in range(4):
                         execute(stream, "human-monitor-command", **{"command-line": "sendkey ret"})
                         if attempt < 3:
@@ -63,6 +63,8 @@ def check_logo(iso, screenshot):
                                 print("MAJIX OS logo and moving Plymouth frames detected")
                                 return
                         time.sleep(0.15)
+            if vga.exists():
+                Path(iso.parent, "last-boot-frame.ppm").write_bytes(vga.read_bytes())
             raise RuntimeError("The VM did not display the animated MAJIX OS logo")
         finally:
             if vm.poll() is None:

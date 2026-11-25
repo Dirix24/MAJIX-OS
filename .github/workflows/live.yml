@@ -70,8 +70,10 @@ jobs:
           tail -100 boot.log
           exit 1
       - name: Check the MAJIX logo during boot in QEMU
+        id: boot_logo
         run: python3 tests/check-boot-logo.py "$RUNNER_TEMP/majix/majix-os-0.1-alpha-amd64.iso" "$RUNNER_TEMP/majix/boot-logo.ppm"
       - uses: actions/upload-artifact@v4
+        if: success() || steps.boot_logo.outcome == 'failure'
         with:
           name: majix-os-0.1-alpha-amd64
           path: |
@@ -79,5 +81,6 @@ jobs:
             ${{ runner.temp }}/majix/SHA256SUMS
             ${{ runner.temp }}/majix/boot-report.txt
             ${{ runner.temp }}/majix/boot-logo.ppm
+            ${{ runner.temp }}/majix/last-boot-frame.ppm
           compression-level: 0
           if-no-files-found: error
