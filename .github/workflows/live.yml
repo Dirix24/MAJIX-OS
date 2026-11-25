@@ -1,0 +1,48 @@
+name: MAJIX OS Live AMD64
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - build-live.sh
+      - .github/workflows/live.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with Debian 13 live-build
+        run: |
+          docker run --rm --privileged \
+            --mount "type=bind,source=$PWD,target=/src,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP,target=/out" \
+            debian:13-slim bash -ec '
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y live-build ca-certificates rsync
+              bash /src/build-live.sh /out/majix
+            '
+      - name: Verify checksum and BIOS/UEFI boot entries
+        working-directory: ${{ runner.temp }}/majix
+        run: |
+          sha256sum -c SHA256SUMS
+          sudo apt-get update
+          sudo apt-get install -y xorriso
+          xorriso -indev majix-os-0.1-alpha-amd64.iso -report_el_torito plain > boot-report.txt
+          cat boot-report.txt
+          grep -E 'El Torito boot img .*BIOS' boot-report.txt
+          grep -E 'El Torito boot img .*UEFI' boot-report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: majix-os-0.1-alpha-amd64
+          path: |
+            ${{ runner.temp }}/majix/majix-os-0.1-alpha-amd64.iso
+            ${{ runner.temp }}/majix/SHA256SUMS
+            ${{ runner.temp }}/majix/boot-report.txt
+          compression-level: 0
+          if-no-files-found: error
