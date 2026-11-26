@@ -25,11 +25,22 @@ La alfa incluye KDE Plasma en español con Wayland y XWayland, red con NetworkMa
 
 Seleccionas uno de los dos perfiles persistentes al preparar el USB. Si arrancas solo con la ISO, los cambios quedan en memoria temporal. Reiniciar no formatea ningún disco. [Guía para preparar el USB y comprobar el guardado](docs/persistencia.md).
 
+## Comprobar dónde se guardan los cambios
+
+Abre Konsole y ejecuta `majix-storage`. El comando consulta el almacenamiento montado en esa sesión y muestra si está activa la persistencia completa, la persistencia de la carpeta personal o la sesión temporal. Si falla el desbloqueo del USB, comprueba aquí el estado antes de guardar trabajo importante.
+
 ## Estado del proyecto
 
 - **Disponible en la alfa:** arranque Live AMD64, KDE Plasma, animación con el logotipo y configuración de persistencia cifrada por USB.
 - **Verificación:** GitHub Actions comprueba la suma de la ISO, las entradas BIOS y UEFI y el arranque Live en QEMU. La prueba de escritura y lectura en un USB cifrado después de reiniciar sigue pendiente.
 - **Instalación:** Johnny, el instalador del proyecto, está previsto en la hoja de ruta. La selección entre conservar todos los cambios y conservar solo la carpeta personal se configura hoy en el USB Live.
+
+### Criterios para una versión estable
+
+- Arrancar desde sistemas BIOS y UEFI y llegar al escritorio en una máquina virtual y en equipos físicos AMD64.
+- Verificar los perfiles completo y personal con un USB LUKS2 a través de dos arranques. Comprobar también el caso de una contraseña incorrecta y el arranque sin USB.
+- Validar red, sonido, apagado y reinicio en los equipos de prueba.
+- Verificar el instalador Johnny con discos virtuales y probar la recuperación antes de recomendar la instalación en equipos reales.
 
 Consulta la [especificación y la hoja de ruta](docs/especificacion.md#24-hoja-de-ruta).
 

@@ -1,0 +1,38 @@
+#!/bin/sh
+set -eu
+
+# Debian Live mounts the writable root layer here, backed by RAM or the USB.
+overlay=$(findmnt --mountpoint /run/live/overlay --noheadings --output FSTYPE,VFS-OPTIONS) || {
+    printf '%s\n' 'No se detectó una sesión Live de MAJIX OS.'
+    exit 1
+}
+set -- $overlay
+case "${1:-}:${2:-}" in
+    ext4:rw|ext4:rw,*)
+        printf '%s\n' 'Persistencia completa activa: los cambios del sistema se guardan en el USB.'
+        exit 0
+        ;;
+    tmpfs:rw|tmpfs:rw,*) ;;
+    *)
+        printf '%s\n' 'No se pudo confirmar una capa de almacenamiento Live escribible.'
+        exit 1
+        ;;
+esac
+
+# A persistent home is a bind mount from a volume under /run/live/persistence.
+home=$(findmnt --mountpoint /home/majix --noheadings --output MAJ:MIN,FSTYPE,VFS-OPTIONS) || home=
+set -- $home
+case "${2:-}:${3:-}" in
+    ext4:rw|ext4:rw,*)
+        if findmnt --list --noheadings --raw --output MAJ:MIN,TARGET |
+            awk -v device="$1" '$1 == device && $2 ~ /^\/run\/live\/persistence\/[^/]+$/ { found = 1 } END { exit !found }'
+        then
+            printf '%s\n' 'Persistencia personal activa: solo se guarda la carpeta /home/majix.'
+            exit 0
+        fi
+        printf '%s\n' 'La carpeta personal tiene un montaje cuyo origen persistente no se pudo confirmar.'
+        exit 1
+        ;;
+esac
+
+printf '%s\n' 'Sesión temporal: los cambios de la sesión se pierden al reiniciar.'

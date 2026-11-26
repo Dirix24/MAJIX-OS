@@ -124,6 +124,9 @@ install -m 0755 "$source_dir/config/persistence-menu.hook.binary" \
     config/hooks/live/9010-majix-persistence.hook.binary
 printf '%s\n' 'CRYPTSETUP=y' > config/includes.chroot/etc/cryptsetup-initramfs/conf-hook
 
+install -D -m 0755 "$source_dir/bin/majix-storage" \
+    config/includes.chroot/usr/local/bin/majix-storage
+
 lb build
 image=majix-os-0.1-alpha-amd64.hybrid.iso
 test -s "$image"

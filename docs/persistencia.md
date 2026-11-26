@@ -2,7 +2,7 @@
 
 ## Elegir el modo
 
-**Live system** activa la persistencia por defecto. Busca un volumen LUKS2 preparado en un USB extraíble y pide la contraseña para desbloquearlo. Si arrancas solo con la ISO, o el sistema no consigue desbloquear un volumen compatible, la sesión usa memoria temporal. Antes de guardar trabajo importante, comprueba que el USB se desbloqueó y que el volumen aparece en `findmnt | grep /live/persistence`.
+**Live system** activa la persistencia por defecto. Busca un volumen LUKS2 preparado en un USB extraíble y pide la contraseña para desbloquearlo. Si arrancas solo con la ISO, o el sistema no consigue desbloquear un volumen compatible, la sesión usa memoria temporal. Antes de guardar trabajo importante, ejecuta `majix-storage` en Konsole y comprueba que indica persistencia activa. El comando identifica el modo de la sesión actual.
 
 **MAJIX OS - Sesion temporal (sin guardar)** omite la persistencia incluso con el USB conectado. Al reiniciar se descartan los cambios de esa sesión y la ISO vuelve a su estado original. El arranque no formatea el USB ni el disco interno.
 
