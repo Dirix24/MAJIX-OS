@@ -4,7 +4,7 @@
 
 Diseñar y desarrollar una distribución GNU/Linux independiente, moderna, modular, portátil, personalizable, eficiente, segura y de código abierto denominada MAJIX OS.
 
-MAJIX OS estará inspirado conceptualmente en Debian, Raspberry Pi OS, Tails, Arch Linux, NixOS, Fedora, Ubuntu Studio y otros sistemas tecnológicos modernos, pero contará con identidad, herramientas, arquitectura de integración y experiencia de usuario propias.
+MAJIX OS toma de Tails la idea de llevar el sistema en un USB. Fedora Workstation y Pop!_OS inspiran la experiencia de escritorio para crear y desarrollar. De Kali Linux adopta la idea de reunir herramientas en una edición especializada, orientada aquí a programación, electrónica, automatización y trabajo tecnológico. La base actual es Debian 13 con una identidad visual y herramientas propias.
 
 Su finalidad será proporcionar un laboratorio tecnológico completo para:
 
@@ -320,7 +320,7 @@ Mostrar un asistente de bienvenida que permita modificar todas las decisiones an
 
 ## 7. Sistema de almacenamiento inteligente: Silvestre
 
-Desarrollar Silvestre Storage Manager.
+Desarrollar Silvestre Storage Manager. MAJIX Studio ya ofrece la elección de destino al crear proyectos o copiar archivos. En el USB portátil, los proyectos guardados explícitamente en MAJIXProjects se gestionan por separado de los cambios del sistema.
 
 El usuario deberá tener control absoluto sobre dónde guarda cada proyecto.
 
