@@ -2,7 +2,7 @@
 set -eu
 
 . ../config/binary
-persistence_options="persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=lukslabel persistence-label=MAJIX_DATA"
+persistence_options="persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA"
 temporary_options="${LB_BOOTAPPEND_LIVE%" $persistence_options"}"
 test "$temporary_options" != "$LB_BOOTAPPEND_LIVE"
 

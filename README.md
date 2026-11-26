@@ -10,7 +10,7 @@ La alfa incluye KDE Plasma en español con Wayland y XWayland, red con NetworkMa
 
 La edición Developer incorpora Git, Python con entornos virtuales, Node.js, herramientas de compilación C/C++ y ripgrep. Desde MAJIX Studio puedes abrir Konsole, Kate y Dolphin, crear un proyecto con plantilla Python, JavaScript o C, y copiar varios archivos de una vez.
 
-Elige **USB de MAJIX** para guardar en la partición de trabajo `MAJIXWORK` del medio de arranque, cuando esté disponible, o **Dispositivo conectado** para usar una unidad extraíble distinta. Quitar el USB de trabajo después de guardar o apagar correctamente conserva los archivos de esa unidad. La partición de trabajo es independiente de la persistencia LUKS2 y guarda archivos sin cifrado.
+Elige **USB de MAJIX** para guardar en la carpeta `MAJIXProjects` del propio medio de arranque, o **Dispositivo conectado** para guardar en otra unidad extraíble. El USB preparado arranca directamente en Plasma y activa la persistencia sin pedir contraseña. Los datos del USB quedan sin cifrar.
 
 ## Descargar y probar
 
@@ -21,7 +21,7 @@ Elige **USB de MAJIX** para guardar en la partición de trabajo `MAJIXWORK` del 
 
 ## Qué se guarda al reiniciar
 
-**La persistencia está activada por defecto en Live system.** Para guardar cambios necesitas una memoria USB con un volumen cifrado LUKS2 preparado. La ISO contiene el sistema base y el USB recibe los cambios que hayas decidido conservar.
+**La persistencia está activada por defecto en Live system.** Para guardar cambios necesitas una memoria USB con un volumen ext4 preparado y etiquetado `MAJIX_DATA`. La ISO contiene el sistema base y el USB recibe los cambios que hayas decidido conservar.
 
 | Modo | Qué conserva |
 | --- | --- |
@@ -37,14 +37,14 @@ Abre Konsole y ejecuta `majix-storage`. El comando consulta el almacenamiento mo
 
 ## Estado del proyecto
 
-- **Disponible en la alfa:** arranque Live AMD64, KDE Plasma, animación con el logotipo y configuración de persistencia cifrada por USB.
-- **Verificación:** GitHub Actions comprueba la suma de la ISO, las entradas BIOS y UEFI y el arranque Live en QEMU. La prueba de escritura y lectura en un USB cifrado después de reiniciar sigue pendiente.
+- **Disponible en la alfa:** arranque Live AMD64, KDE Plasma, animación con el logotipo y configuración de persistencia por USB sin contraseña.
+- **Verificación:** GitHub Actions comprueba la suma de la ISO, las entradas BIOS y UEFI y el arranque Live en QEMU. La prueba de escritura y lectura en un USB persistente después de reiniciar sigue pendiente.
 - **Instalación:** Johnny, el instalador del proyecto, está previsto en la hoja de ruta. La selección entre conservar todos los cambios y conservar solo la carpeta personal se configura hoy en el USB Live.
 
 ### Criterios para una versión estable
 
 - Arrancar desde sistemas BIOS y UEFI y llegar al escritorio en una máquina virtual y en equipos físicos AMD64.
-- Verificar los perfiles completo y personal con un USB LUKS2 a través de dos arranques. Comprobar también el caso de una contraseña incorrecta y el arranque sin USB.
+- Verificar los perfiles completo y personal con un USB con persistencia a través de dos arranques. Comprobar también el caso de una contraseña incorrecta y el arranque sin USB.
 - Validar red, sonido, apagado y reinicio en los equipos de prueba.
 - Verificar el instalador Johnny con discos virtuales y probar la recuperación antes de recomendar la instalación en equipos reales.
 

@@ -1,30 +1,16 @@
-# Cómo guarda los cambios MAJIX OS Live
+# Guardar en MAJIX OS Portable
 
-## Elegir el modo
+El USB preparado tiene una partición UEFI `MAJIXUSB` y una partición de datos ext4 `MAJIX_DATA`. **Live system** arranca con inicio automático de sesión. Debian Live usa `MAJIX_DATA` como capa escribible cuando el archivo `persistence.conf` contiene `/ union`. Así se conservan documentos, ajustes y los paquetes instalados en la sesión. No se pide contraseña para desbloquear el volumen. Los datos quedan sin cifrar.
 
-**Live system** activa la persistencia por defecto. Busca un volumen LUKS2 preparado en un USB extraíble y pide la contraseña para desbloquearlo. Si arrancas solo con la ISO, o el sistema no consigue desbloquear un volumen compatible, la sesión usa memoria temporal. Antes de guardar trabajo importante, ejecuta `majix-storage` en Konsole y comprueba que indica persistencia activa. El comando identifica el modo de la sesión actual.
+## Elegir dónde guarda MAJIX Studio
 
-**MAJIX OS - Sesion temporal (sin guardar)** omite la persistencia incluso con el USB conectado. Al reiniciar se descartan los cambios de esa sesión y la ISO vuelve a su estado original. El arranque no formatea el USB ni el disco interno.
+- **USB de MAJIX** usa `MAJIXProjects` en `MAJIX_DATA`, fuera de la capa de cambios del sistema.
+- **Dispositivo conectado** guarda en la unidad extraíble que selecciones. Si no aparece, conéctala y pulsa **Actualizar unidades**.
 
-## Preparar una memoria USB cifrada
+La carpeta de proyectos y las carpetas que creas para copiar archivos son independientes de la carpeta personal. El modo **Sesión temporal** descarta los cambios del sistema al reiniciar. En ese modo solo se conservan las copias guardadas explícitamente en una unidad escribible. Si arrancas la ISO sin un USB preparado, la sesión tiene almacenamiento temporal.
 
-Usa un USB con espacio suficiente y una partición vacía dedicada a MAJIX OS. La preparación inicial de LUKS y ext4 borra los datos de la partición que elijas. Comprueba el dispositivo y su tamaño con `lsblk -o NAME,TRAN,RM,SIZE,FSTYPE,LABEL,MOUNTPOINTS`.
+## Preparar otro USB
 
-1. Crea un contenedor **LUKS2** en la partición del USB. Asigna al contenedor la etiqueta de cabecera `persistence`. En un contenedor LUKS2 existente puedes asignarla con `cryptsetup config --label persistence <partición-LUKS2>`.
-2. Desbloquea el contenedor y crea en su interior un sistema de archivos **ext4** con la etiqueta **`MAJIX_DATA`**.
-3. Monta el sistema de archivos y crea un archivo de texto llamado `persistence.conf` en su raíz. Escribe una sola de las siguientes líneas, según el comportamiento que quieras para ese USB.
+En una partición ext4 vacía y dedicada al almacenamiento, usa la etiqueta `MAJIX_DATA`. Crea `persistence.conf` en la raíz con la línea `/ union` y crea la carpeta `MAJIXProjects` con permisos de escritura para el usuario Live `majix` (UID 1000). Para comprobar el perfil, ejecuta `majix-storage` en Konsole. Guarda un archivo, apaga el sistema y comprueba que reaparece al arrancar.
 
-| Quiero guardar | Contenido de `persistence.conf` | Qué pasa al reiniciar |
-| --- | --- | --- |
-| **El sistema y mis archivos** | `/ union` | Conserva cambios en el sistema Live, como archivos, ajustes y paquetes instalados. |
-| **Solo mi carpeta personal** | `/home/majix` | Conserva documentos y ajustes personales. Los cambios fuera de esa carpeta se descartan. |
-
-4. Desmonta el sistema de archivos, cierra el contenedor y arranca MAJIX OS con el USB conectado. Selecciona **Live system** e introduce la contraseña.
-
-Un USB preparado con la opción anterior `/home/majix` conserva ese comportamiento. Si quieres pasar a `/ union`, haz una copia de tus archivos y prepara un volumen nuevo para el perfil completo.
-
-## Comprobar que funciona
-
-Crea un archivo en tu carpeta personal, apaga la sesión desde el escritorio y vuelve a arrancar con el mismo USB y contraseña. El archivo debe seguir ahí. Si seleccionaste `/ union`, también puedes comprobar que un paquete instalado durante la primera sesión permanece disponible. En QEMU, presenta el almacenamiento como un USB extraíble (`usb-storage,removable=on`).
-
-Referencias de Debian Live. [Opciones de arranque](https://manpages.debian.org/trixie/live-boot-doc/live-boot.7.en.html) · [Formato de persistence.conf](https://manpages.debian.org/trixie/live-boot-doc/persistence.conf.5.en.html)
+[Opciones de Debian Live](https://manpages.debian.org/trixie/live-boot-doc/live-boot.7.en.html)

@@ -31,7 +31,7 @@ lb config \
     --iso-application 'MAJIX OS 0.1 Alpha' \
     --checksums sha256 \
     --chroot-squashfs-compression-type zstd \
-    --bootappend-live 'boot=live components quiet splash hostname=majix username=majix locales=es_ES.UTF-8 nox11autologin persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=lukslabel persistence-label=MAJIX_DATA'
+    --bootappend-live 'boot=live components quiet splash hostname=majix username=majix locales=es_ES.UTF-8 nox11autologin persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA'
 
 mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
     config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib \
@@ -91,6 +91,7 @@ VERSION_CODENAME=trixie
 HOME_URL="https://github.com/Dirix24/MAJIX-OS"
 VARIANT="Developer"
 VARIANT_ID=developer
+LOGO=majix-os
 DEBIAN_CODENAME=trixie
 RELEASE
 
@@ -149,6 +150,8 @@ install -D -m 0644 "$developer/majix-session.desktop" "$live/etc/xdg/autostart/m
 install -D -m 0644 "$developer/kcm-about-distrorc" "$live/etc/xdg/kcm-about-distrorc"
 install -D -m 0644 "$developer/wallpaper.jpg" "$live/usr/share/majix/wallpaper.jpg"
 install -D -m 0644 "$source_dir/branding/plymouth/watermark.png" "$live/usr/share/majix/emblem.png"
+install -D -m 0644 "$source_dir/branding/plymouth/watermark.png" \
+    "$live/usr/share/icons/hicolor/128x128/apps/majix-os.png"
 
 lb build
 image=majix-os-0.1-alpha-amd64.hybrid.iso

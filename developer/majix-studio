@@ -43,12 +43,19 @@ def devices():
         for partition in partitions:
             if partition["ro"] or partition["fstype"] not in FILESYSTEMS:
                 continue
-            if partition["name"] == boot or (boot_disk and partition["label"] != "MAJIXWORK"):
+            if partition["name"] == boot or (boot_disk and partition["label"] not in {"MAJIX_DATA", "MAJIXWORK"}):
                 continue
             yield boot_disk, partition
 
 
-def mount_destination(device):
+def mount_destination(device, boot_disk):
+    if boot_disk and device["label"] == "MAJIX_DATA":
+        for mount in device["mountpoints"]:
+            if mount == "/run/live/overlay" or (mount and mount.startswith("/run/live/persistence/")):
+                destination = Path(mount) / "MAJIXProjects"
+                if destination.is_dir() and os.access(destination, os.W_OK):
+                    return destination
+                raise OSError("La carpeta MAJIXProjects del USB no tiene permiso de escritura.")
     mountpoints = [p for p in device["mountpoints"] if p and p.startswith(("/media/", "/run/media/"))]
     if not mountpoints:
         subprocess.run(["udisksctl", "mount", "--block-device", device["name"]],
@@ -59,7 +66,9 @@ def mount_destination(device):
     if len(mountpoints) != 1:
         raise OSError("No se pudo determinar la carpeta montada de esa unidad.")
     destination = Path(mountpoints[0])
-    if not os.access(destination, os.W_OK):
+    if boot_disk and device["label"] == "MAJIX_DATA":
+        destination = destination / "MAJIXProjects"
+    if not destination.is_dir() or not os.access(destination, os.W_OK):
         raise OSError("La unidad está montada sin permiso de escritura.")
     return destination
 
@@ -136,7 +145,7 @@ class Studio(QWidget):
         tools = QHBoxLayout()
         for text, command in (("Terminal", "konsole"), ("Editor", "kate"), ("Archivos", "dolphin")):
             button = QPushButton(text)
-            button.clicked.connect(lambda checked=False, cmd=command: subprocess.Popen([cmd]))
+            button.clicked.connect(lambda checked=False, cmd=command: self.launch(cmd))
             tools.addWidget(button)
         layout.addLayout(tools)
         self.status = QLabel()
@@ -144,6 +153,12 @@ class Studio(QWidget):
         layout.addWidget(self.status)
         layout.addStretch()
         self.refresh()
+
+    def launch(self, command):
+        try:
+            subprocess.Popen([command])
+        except OSError as error:
+            QMessageBox.warning(self, "MAJIX Studio", f"No se pudo abrir {command}: {error}")
 
     def refresh(self):
         self.destination.clear()
@@ -166,11 +181,12 @@ class Studio(QWidget):
                 raise ValueError("Elige una unidad de destino.")
             # Recheck after a hot unplug before trying to mount or write.
             identity = (device["name"], device["uuid"])
-            current = next((item for _, item in devices()
+            current = next(((is_boot, item) for is_boot, item in devices()
                             if (item["name"], item["uuid"]) == identity), None)
             if current is None:
                 raise OSError("La unidad cambió. Actualiza la lista y vuelve a elegirla.")
-            target = action(mount_destination(current), self.name.text().strip())
+            boot_disk, device = current
+            target = action(mount_destination(device, boot_disk), self.name.text().strip())
         except (OSError, ValueError, subprocess.CalledProcessError) as error:
             QMessageBox.warning(self, "MAJIX Studio", str(error))
             return
