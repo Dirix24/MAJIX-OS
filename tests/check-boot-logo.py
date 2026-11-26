@@ -54,8 +54,9 @@ def check_logo(iso, screenshot):
                         execute(stream, "screendump", filename=str(vga))
                         pixels = vga.read_bytes()
                         # The teal mark is unique to this splash and occupies
-                        # thousands of pixels at the default VM resolution.
-                        if pixels.count(bytes.fromhex("66e5d1")) > 300:
+                        # the distinctive cyan tones of the supplied emblem.
+                        if sum(pixels.count(bytes((0, g, b))) for g, b in
+                               ((250, 252), (251, 253), (251, 252))) > 50:
                             if first_frame is None:
                                 first_frame = pixels
                                 screenshot.write_bytes(pixels)

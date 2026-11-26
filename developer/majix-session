@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+state=${XDG_CONFIG_HOME:-"$HOME/.config"}/majix
+mkdir -p "$state"
+[ ! -f "$state/developer-desktop" ] || exit 0
+if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
+    plasma-apply-wallpaperimage /usr/share/majix/wallpaper.jpg || exit 0
+fi
+touch "$state/developer-desktop"
+exec majix-studio

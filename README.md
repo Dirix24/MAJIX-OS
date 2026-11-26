@@ -2,9 +2,15 @@
 
 ![Logotipo de MAJIX OS](branding/logo.png)
 
-**MAJIX OS 0.1 Alpha** es una distribución Live para equipos AMD64, basada en Debian 13. Nace como un entorno portátil para aprender, programar y experimentar. Puedes probarla desde una ISO en una máquina virtual o arrancarla desde un medio externo.
+**MAJIX OS 0.1 Alpha** es una distribución Live para equipos AMD64, basada en Debian 13. Es una edición portátil para desarrollo con identidad propia, construida sobre Debian para conservar el ecosistema de paquetes APT. Puedes probarla desde una ISO en una máquina virtual o arrancarla desde un medio externo.
 
 La alfa incluye KDE Plasma en español con Wayland y XWayland, red con NetworkManager, sonido con PipeWire y aplicaciones como Firefox ESR, Konsole y Kate. La animación de arranque lo gestiona Plymouth, que muestra el logotipo de MAJIX OS con un indicador animado.
+
+## MAJIX Studio
+
+La edición Developer incorpora Git, Python con entornos virtuales, Node.js, herramientas de compilación C/C++ y ripgrep. Desde MAJIX Studio puedes abrir Konsole, Kate y Dolphin, crear un proyecto con plantilla Python, JavaScript o C, y copiar varios archivos de una vez.
+
+Elige **USB de MAJIX** para guardar en la partición de trabajo `MAJIXWORK` del medio de arranque, cuando esté disponible, o **Dispositivo conectado** para usar una unidad extraíble distinta. Quitar el USB de trabajo después de guardar o apagar correctamente conserva los archivos de esa unidad. La partición de trabajo es independiente de la persistencia LUKS2 y guarda archivos sin cifrado.
 
 ## Descargar y probar
 

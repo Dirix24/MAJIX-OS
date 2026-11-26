@@ -40,6 +40,13 @@ mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
     config/includes.chroot/etc/cryptsetup-initramfs config/hooks/live
 cat > config/package-lists/majix.list.chroot <<'PACKAGES'
 kde-plasma-desktop
+kinfocenter
+python3-pyqt6
+python3-venv
+git
+build-essential
+nodejs
+ripgrep
 kwin-wayland
 sddm
 xserver-xorg
@@ -60,6 +67,7 @@ PACKAGES
 cat > config/includes.chroot/etc/skel/.config/kdeglobals <<'KDE'
 [General]
 ColorScheme=BreezeDark
+AccentColor=85,235,231
 
 [KDE]
 LookAndFeelPackage=org.kde.breezedark.desktop
@@ -74,12 +82,15 @@ SDDM
 # Install alongside Debian's release metadata to keep package detection intact.
 cat > config/includes.chroot/usr/lib/majix-release <<'RELEASE'
 NAME="MAJIX OS"
-PRETTY_NAME="MAJIX OS 0.1 Alpha"
+PRETTY_NAME="MAJIX OS Developer 0.1 Alpha"
 ID=majix
 ID_LIKE=debian
 VERSION_ID="0.1"
-VERSION="0.1 Alpha"
-VERSION_CODENAME=alpha
+VERSION="0.1 Alpha Developer"
+VERSION_CODENAME=trixie
+HOME_URL="https://github.com/Dirix24/MAJIX-OS"
+VARIANT="Developer"
+VARIANT_ID=developer
 DEBIAN_CODENAME=trixie
 RELEASE
 
@@ -115,6 +126,8 @@ done
 
 # Load the virtual display drivers early enough for the graphical splash in QEMU.
 printf '\nvirtio_gpu\nbochs\n' >> /etc/initramfs-tools/modules
+rm -f /etc/os-release
+ln -s ../usr/lib/majix-release /etc/os-release
 plymouth-set-default-theme majix
 update-initramfs -u -k all
 PLYMOUTH
@@ -126,6 +139,16 @@ printf '%s\n' 'CRYPTSETUP=y' > config/includes.chroot/etc/cryptsetup-initramfs/c
 
 install -D -m 0755 "$source_dir/bin/majix-storage" \
     config/includes.chroot/usr/local/bin/majix-storage
+
+developer="$source_dir/developer"
+live=config/includes.chroot
+install -D -m 0755 "$developer/majix-studio" "$live/usr/local/bin/majix-studio"
+install -D -m 0755 "$developer/majix-session" "$live/usr/local/bin/majix-session"
+install -D -m 0644 "$developer/majix-studio.desktop" "$live/usr/share/applications/majix-studio.desktop"
+install -D -m 0644 "$developer/majix-session.desktop" "$live/etc/xdg/autostart/majix-session.desktop"
+install -D -m 0644 "$developer/kcm-about-distrorc" "$live/etc/xdg/kcm-about-distrorc"
+install -D -m 0644 "$developer/wallpaper.jpg" "$live/usr/share/majix/wallpaper.jpg"
+install -D -m 0644 "$source_dir/branding/plymouth/watermark.png" "$live/usr/share/majix/emblem.png"
 
 lb build
 image=majix-os-0.1-alpha-amd64.hybrid.iso

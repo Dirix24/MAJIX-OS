@@ -7,6 +7,7 @@ on:
       - build-live.sh
       - config/**
       - bin/**
+      - developer/**
       - tests/check-storage.sh
       - branding/plymouth/**
       - tests/check-boot-logo.py
@@ -22,6 +23,8 @@ jobs:
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
+      - name: Check Studio syntax
+        run: python3 -m py_compile developer/majix-studio
       - name: Test storage mode detection
         run: sh tests/check-storage.sh
       - name: Build with Debian 13 live-build

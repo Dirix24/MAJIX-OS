@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=MAJIX Studio
+Comment=Crea proyectos y copia archivos entre unidades
+Exec=majix-studio
+Icon=/usr/share/majix/emblem.png
+Categories=Development;
+Terminal=false
