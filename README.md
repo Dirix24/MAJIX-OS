@@ -38,13 +38,13 @@ Abre Konsole y ejecuta `majix-storage`. El comando consulta el almacenamiento mo
 ## Estado del proyecto
 
 - **Disponible en la alfa:** arranque Live AMD64, KDE Plasma, animación con el logotipo y configuración de persistencia por USB sin contraseña.
-- **Verificación:** GitHub Actions comprueba la suma de la ISO, las entradas BIOS y UEFI y el arranque Live en QEMU. La prueba de escritura y lectura en un USB persistente después de reiniciar sigue pendiente.
+- **Verificación:** GitHub Actions comprueba la suma de la ISO, las entradas BIOS y UEFI y el arranque Live en QEMU. En QEMU se escribió un archivo en la capa ext4 y se recuperó en el siguiente arranque. Falta repetir esa prueba en equipos físicos.
 - **Instalación:** Johnny, el instalador del proyecto, está previsto en la hoja de ruta. La selección entre conservar todos los cambios y conservar solo la carpeta personal se configura hoy en el USB Live.
 
 ### Criterios para una versión estable
 
 - Arrancar desde sistemas BIOS y UEFI y llegar al escritorio en una máquina virtual y en equipos físicos AMD64.
-- Verificar los perfiles completo y personal con un USB con persistencia a través de dos arranques. Comprobar también el caso de una contraseña incorrecta y el arranque sin USB.
+- Verificar los perfiles completo y personal con un USB con persistencia a través de dos arranques. Comprobar también el arranque sin USB de datos y el modo temporal.
 - Validar red, sonido, apagado y reinicio en los equipos de prueba.
 - Verificar el instalador Johnny con discos virtuales y probar la recuperación antes de recomendar la instalación en equipos reales.
 
