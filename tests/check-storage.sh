@@ -7,6 +7,13 @@ trap 'rm -rf -- "$fixture"' EXIT
 cat > "$fixture/findmnt" <<'MOCK'
 #!/bin/sh
 case "$1:$2" in
+    --target:/)
+        if [ "$MODE" = union ]; then
+            echo 'rw,lowerdir=/run/live/rootfs/filesystem.squashfs,upperdir=/run/live/persistence/sdb2/rw,workdir=/run/live/persistence/sdb2/work'
+        else
+            echo 'rw,upperdir=/run/live/overlay/rw'
+        fi
+        ;;
     --mountpoint:/run/live/overlay)
         case "$MODE" in
             full) echo 'ext4 rw,noatime' ;;
@@ -33,6 +40,7 @@ MOCK
 chmod +x "$fixture/findmnt"
 export PATH="$fixture:$PATH"
 
+MODE=union sh "$root/bin/majix-storage" | grep -F 'Persistencia completa activa'
 MODE=full sh "$root/bin/majix-storage" | grep -F 'Persistencia completa activa'
 MODE=personal sh "$root/bin/majix-storage" | grep -F 'Persistencia personal activa'
 MODE=temporary sh "$root/bin/majix-storage" | grep -F 'Sesión temporal'

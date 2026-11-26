@@ -1,7 +1,16 @@
 #!/bin/sh
 set -eu
 
-# Debian Live mounts the writable root layer here, backed by RAM or the USB.
+# Debian Live can stack the persistent union over its initial tmpfs-backed root.
+root_options=$(findmnt --target / --noheadings --first-only --output FS-OPTIONS) || root_options=
+case ",$root_options," in
+    *,upperdir=/run/live/persistence/*/rw,*)
+        printf '%s\n' 'Persistencia completa activa: los cambios del sistema se guardan en el USB.'
+        exit 0
+        ;;
+esac
+
+# Some Live profiles mount the backing device directly at the overlay path.
 overlay=$(findmnt --mountpoint /run/live/overlay --noheadings --output FSTYPE,VFS-OPTIONS) || {
     printf '%s\n' 'No se detectó una sesión Live de MAJIX OS.'
     exit 1
