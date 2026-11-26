@@ -1,58 +1,60 @@
-# MAJIX OS
+# MAJIX OS Developer
 
-![Logotipo de MAJIX OS](branding/logo.png)
+<img src="developer/wallpaper.jpg" alt="Emblema hexagonal de MAJIX OS con una M neón cian y violeta" width="420">
 
-**MAJIX OS 0.1 Alpha** es una distribución Live para equipos AMD64, basada en Debian 13. Es una edición portátil para desarrollo con identidad propia, construida sobre Debian para conservar el ecosistema de paquetes APT. Puedes probarla desde una ISO en una máquina virtual o arrancarla desde un medio externo.
+**MAJIX OS Developer 0.1 Alpha** es una estación de desarrollo portátil para equipos AMD64. Arranca desde una ISO o una memoria USB y reúne un escritorio en español, herramientas de programación y una aplicación para decidir dónde guardar cada proyecto.
 
-La alfa incluye KDE Plasma en español con Wayland y XWayland, red con NetworkManager, sonido con PipeWire y aplicaciones como Firefox ESR, Konsole y Kate. La animación de arranque lo gestiona Plymouth, que muestra el logotipo de MAJIX OS con un indicador animado.
+El proyecto toma de **Tails** la idea de llevar el sistema en un USB y de **Fedora Workstation** y **Pop!_OS** la atención al escritorio de trabajo. De **Kali Linux** toma la idea de reunir herramientas para un propósito concreto. Aquí el foco es la programación y el trabajo tecnológico. La base es **Debian 13**, con sus paquetes y el gestor APT.
 
-## MAJIX Studio
+## Qué incluye
 
-La edición Developer incorpora Git, Python con entornos virtuales, Node.js, herramientas de compilación C/C++ y ripgrep. Desde MAJIX Studio puedes abrir Konsole, Kate y Dolphin, crear un proyecto con plantilla Python, JavaScript o C, y copiar varios archivos de una vez.
-
-Elige **USB de MAJIX** para guardar en la carpeta `MAJIXProjects` del propio medio de arranque, o **Dispositivo conectado** para guardar en otra unidad extraíble. El USB preparado arranca directamente en Plasma y activa la persistencia sin pedir contraseña. Los datos del USB quedan sin cifrar.
-
-## Descargar y probar
-
-1. Abre [GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml), entra en la ejecución exitosa más reciente y descarga el artefacto **majix-os-0.1-alpha-amd64**.
-2. Extrae el ZIP. Si tienes `sha256sum`, ejecuta `sha256sum -c SHA256SUMS` en la carpeta extraída para verificar la ISO.
-3. Monta la ISO como unidad óptica de una máquina virtual AMD64. Para arrancar en UEFI, desactiva Secure Boot en la máquina virtual.
-4. En el menú, selecciona **Live system** para usar el modo predeterminado o **MAJIX OS - Sesion temporal (sin guardar)** para una sesión desechable.
-
-## Qué se guarda al reiniciar
-
-**La persistencia está activada por defecto en Live system.** Para guardar cambios necesitas una memoria USB con un volumen ext4 preparado y etiquetado `MAJIX_DATA`. La ISO contiene el sistema base y el USB recibe los cambios que hayas decidido conservar.
-
-| Modo | Qué conserva |
+| Área | Disponible en la alfa |
 | --- | --- |
-| **Guardar el sistema y mis archivos** | Documentos, configuraciones y paquetes que instales durante la sesión Live. |
-| **Reiniciar limpio y guardar mis archivos** | Todo lo que guardes en tu carpeta personal. El resto de los cambios de la sesión Live se descarta. |
-| **Sesión temporal** | Los cambios de la sesión se guardan en memoria y se pierden al reiniciar. |
+| Escritorio | KDE Plasma en español, Wayland y XWayland, fondo con la M neón e identidad propia en **Acerca de este sistema**. |
+| Desarrollo | Git, Python con entornos virtuales, Node.js, compilación C/C++ y ripgrep. |
+| Aplicaciones | Kate para editar código, Konsole para la terminal, Dolphin para archivos y Firefox ESR para navegar. |
+| Sistema | NetworkManager para la red, PipeWire para el sonido y Plymouth para la animación de arranque. |
+| Proyectos | **MAJIX Studio** crea proyectos y copia varios archivos al destino que elijas. |
 
-Seleccionas uno de los dos perfiles persistentes al preparar el USB. Si arrancas solo con la ISO, los cambios quedan en memoria temporal. Reiniciar no formatea ningún disco. [Guía para preparar el USB y comprobar el guardado](docs/persistencia.md).
+## Descargar y arrancar
 
-## Comprobar dónde se guardan los cambios
+1. Descarga el [ZIP de la compilación portátil verificada](https://github.com/Dirix24/MAJIX-OS/actions/runs/45872060122/artifacts/15144755154). Las compilaciones posteriores estarán en [GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml).
+2. Extrae el ZIP y ejecuta `sha256sum -c SHA256SUMS` en la carpeta extraída para verificar la ISO.
+3. Para una primera prueba, monta la ISO como unidad óptica en una máquina virtual AMD64 y selecciona **Live system**. Para usar la alfa en UEFI, Secure Boot debe estar desactivado.
+4. Si usas el USB preparado con las particiones `MAJIXUSB` y `MAJIX_DATA`, arranca desde ese medio y selecciona el modo de guardado del menú. La [guía de persistencia](docs/persistencia.md) explica cómo preparar la partición de datos.
 
-Abre Konsole y ejecuta `majix-storage`. El comando consulta el almacenamiento montado en esa sesión y muestra si está activa la persistencia completa, la persistencia de la carpeta personal o la sesión temporal. Si falla el desbloqueo del USB, comprueba aquí el estado antes de guardar trabajo importante.
+## Guardar proyectos con MAJIX Studio
 
-## Estado del proyecto
+Abre **MAJIX Studio** desde el lanzador. Escribe un nombre de carpeta, selecciona una plantilla de **Python**, **JavaScript** o **C** y pulsa **Crear proyecto**. Para transferir varios archivos, elige el destino y usa **Copiar varios archivos**. Studio abre la carpeta que acaba de crear. También ofrece accesos a Terminal, Editor y Archivos.
 
-- **Disponible en la alfa:** arranque Live AMD64, KDE Plasma, animación con el logotipo y configuración de persistencia por USB sin contraseña.
-- **Verificación:** GitHub Actions comprueba la suma de la ISO, las entradas BIOS y UEFI y el arranque Live en QEMU. En QEMU se escribió un archivo en la capa ext4 y se recuperó en el siguiente arranque. Falta repetir esa prueba en equipos físicos.
-- **Instalación:** Johnny, el instalador del proyecto, está previsto en la hoja de ruta. La selección entre conservar todos los cambios y conservar solo la carpeta personal se configura hoy en el USB Live.
+| Destino en Studio | Dónde termina tu trabajo |
+| --- | --- |
+| **USB de MAJIX** | En `MAJIXProjects`, dentro de la partición `MAJIX_DATA` del propio USB de arranque. |
+| **Dispositivo conectado** | En otra memoria o unidad extraíble escribible que selecciones. Pulsa **Actualizar unidades** después de conectarla. |
 
-### Criterios para una versión estable
+## Qué ocurre al reiniciar
 
-- Arrancar desde sistemas BIOS y UEFI y llegar al escritorio en una máquina virtual y en equipos físicos AMD64.
-- Verificar los perfiles completo y personal con un USB con persistencia a través de dos arranques. Comprobar también el arranque sin USB de datos y el modo temporal.
-- Validar red, sonido, apagado y reinicio en los equipos de prueba.
-- Verificar el instalador Johnny con discos virtuales y probar la recuperación antes de recomendar la instalación en equipos reales.
+- **Guardado completo.** Con `MAJIX_DATA` preparada y `/ union` en `persistence.conf`, el modo predeterminado conserva archivos, ajustes y paquetes instalados durante la sesión.
+- **Sesión temporal.** Los cambios del sistema se descartan al reiniciar. Los archivos que hayas guardado explícitamente en `MAJIXProjects` o en otra unidad escribible se conservan.
+- **ISO sin volumen persistente.** La sesión usa almacenamiento temporal. Abre Konsole y ejecuta `majix-storage` para comprobar el estado antes de guardar trabajo importante.
 
-Consulta la [especificación y la hoja de ruta](docs/especificacion.md#24-hoja-de-ruta).
+El USB portátil preparado inicia sesión automáticamente y su partición ext4 funciona sin contraseña. **Los datos de esa partición quedan sin cifrar.** [Guía de almacenamiento](docs/persistencia.md)
+
+## Estado y hoja de ruta
+
+| Comprobación | Estado |
+| --- | --- |
+| ISO y arranque | SHA-256, entradas BIOS y UEFI, inicio Live y animación comprobados en GitHub Actions y QEMU. |
+| Persistencia | En QEMU se guardó un archivo en la capa ext4 y se recuperó en el siguiente arranque. También se verificó la escritura en la partición física del USB desde el sistema anfitrión. |
+| MAJIX Studio | Creación de proyectos, copia múltiple y botones probados con destinos simulados. |
+| Equipos físicos | Queda verificar el reinicio con persistencia en la edición portátil y ampliar las pruebas de hardware, red, sonido y apagado. |
+| Instalador Johnny | Previsto en la hoja de ruta. La alfa se distribuye como sistema Live. |
+
+La [especificación completa](docs/especificacion.md) recoge la arquitectura y la [hoja de ruta](docs/especificacion.md#24-hoja-de-ruta) para avanzar hacia una versión estable y ampliar el entorno a electrónica, automatización y otros perfiles tecnológicos.
 
 ## Compilar la ISO
 
-En Debian 13 AMD64, ejecuta desde la raíz del repositorio:
+Desde la raíz del repositorio, en Debian 13 AMD64:
 
 ```bash
 sudo apt-get update
@@ -60,10 +62,10 @@ sudo apt-get install live-build ca-certificates rsync
 sudo bash build-live.sh dist
 ```
 
-La compilación guarda la ISO y su suma SHA-256 en `dist/`.
+La ISO y su archivo `SHA256SUMS` quedan en `dist/`. El repositorio contiene el [generador de la ISO](build-live.sh), el [código de Studio](developer/majix-studio) y las [pruebas de arranque y almacenamiento](tests/).
 
 ## Autoría y licencia
 
-La idea y la dirección del proyecto son de **Dirix24**. La implementación, el logotipo y la documentación de esta alfa se generaron principalmente con **IA generativa (Codex)**, a partir de sus indicaciones. Debian, KDE Plasma y los demás componentes de terceros proceden de sus respectivos proyectos.
+La idea y la dirección del proyecto son de **Dirix24**, que aportó el emblema neón usado en esta página. La implementación y la documentación de la alfa se desarrollaron principalmente con **IA generativa (Codex)** a partir de sus indicaciones.
 
-Los archivos propios de MAJIX OS se distribuyen bajo la [GNU GPL v3 (GPL-3.0-only)](LICENSE). Los componentes de terceros incluidos en la ISO conservan sus respectivas licencias.
+Los archivos propios de MAJIX OS se distribuyen bajo la [GNU GPL v3 (GPL-3.0-only)](LICENSE). Los componentes de terceros conservan sus respectivas licencias.
