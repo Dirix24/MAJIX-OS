@@ -33,7 +33,7 @@ def devices():
         text=True, capture_output=True, check=False,
     ).stdout.strip()
     disks = json.loads(output(
-        ["lsblk", "-J", "-p", "-o", "NAME,TYPE,TRAN,RM,RO,LABEL,FSTYPE,MOUNTPOINTS"]
+        ["lsblk", "-J", "-p", "-o", "NAME,TYPE,TRAN,RM,RO,LABEL,UUID,FSTYPE,MOUNTPOINTS"]
     ))["blockdevices"]
     for disk in disks:
         if disk["ro"] or not (disk["tran"] == "usb" or disk["rm"]):
@@ -165,7 +165,9 @@ class Studio(QWidget):
             if not device:
                 raise ValueError("Elige una unidad de destino.")
             # Recheck after a hot unplug before trying to mount or write.
-            current = next((item for _, item in devices() if item == device), None)
+            identity = (device["name"], device["uuid"])
+            current = next((item for _, item in devices()
+                            if (item["name"], item["uuid"]) == identity), None)
             if current is None:
                 raise OSError("La unidad cambió. Actualiza la lista y vuelve a elegirla.")
             target = action(mount_destination(current), self.name.text().strip())
