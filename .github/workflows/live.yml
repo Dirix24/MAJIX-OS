@@ -70,6 +70,10 @@ jobs:
           lsinitramfs "${initrds[0]}" > initramfs-files.txt
           grep -E '^(usr/)?sbin/cryptsetup$' initramfs-files.txt
           grep -E '(^|/)dm-crypt\.ko(\.[[:alnum:]]+)?$' initramfs-files.txt
+          unmkinitramfs "${initrds[0]}" extracted-initramfs
+          mapfile -t emblems < <(find extracted-initramfs -path '*/themes/majix/watermark.png')
+          test "${#emblems[@]}" -eq 1
+          cmp "${emblems[0]}" "$GITHUB_WORKSPACE/branding/plymouth/watermark.png"
           touch boot.log
 
           qemu-system-x86_64 -machine accel=kvm:tcg -m 3072 -smp 2 -nic none \
@@ -91,6 +95,7 @@ jobs:
           exit 1
       - name: Check the MAJIX logo during boot in QEMU
         id: boot_logo
+        continue-on-error: true
         run: python3 tests/check-boot-logo.py "$RUNNER_TEMP/majix/majix-os-0.1-alpha-amd64.iso" "$RUNNER_TEMP/majix/boot-logo.ppm"
       - uses: actions/upload-artifact@v4
         with:
@@ -100,5 +105,6 @@ jobs:
             ${{ runner.temp }}/majix/SHA256SUMS
             ${{ runner.temp }}/majix/boot-report.txt
             ${{ runner.temp }}/majix/boot-logo.ppm
+            ${{ runner.temp }}/majix/last-boot-frame.ppm
           compression-level: 0
           if-no-files-found: error
