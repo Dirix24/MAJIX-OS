@@ -157,6 +157,7 @@ printf '%s\n' 'CRYPTSETUP=y' > config/includes.chroot/etc/cryptsetup-initramfs/c
 
 # Install the same package used by the update channel so dpkg tracks ownership.
 live=config/includes.chroot
+install -D -m 0644 "$source_dir/developer/kcm-about-distrorc" "$live/etc/xdg/kcm-about-distrorc"
 mkdir -p "$live/usr/share/majix/build"
 "$source_dir/packaging/build-components.sh" "$live/usr/share/majix/build" "${MAJIX_COMPONENT_VERSION:-0.1.0~alpha1}"
 cat > config/hooks/live/8990-majix-components.hook.chroot <<'COMPONENTS'

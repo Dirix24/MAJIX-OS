@@ -30,7 +30,6 @@ for program in majix-studio majix-control; do
     install -D -m 0644 "$dev/$program.desktop" "$build/usr/share/applications/$program.desktop"
 done
 install -D -m 0644 "$dev/majix-session.desktop" "$build/etc/xdg/autostart/majix-session.desktop"
-install -D -m 0644 "$dev/kcm-about-distrorc" "$build/etc/xdg/kcm-about-distrorc"
 install -D -m 0644 "$dev/wallpaper.jpg" "$build/usr/share/majix/wallpaper.jpg"
 emblem="$source_dir/branding/plymouth/watermark.png"
 install -D -m 0644 "$emblem" "$build/usr/share/majix/emblem.png"
