@@ -18,12 +18,21 @@ label majix-temporary
     linux /live/vmlinuz
     initrd /live/initrd.img
     append ${temporary_options} nopersistence
+label majix-safe-graphics
+    menu label MAJIX OS - Graficos seguros
+    linux /live/vmlinuz
+    initrd /live/initrd.img
+    append ${LB_BOOTAPPEND_LIVE} nomodeset plymouth.enable=0
 SYSLINUX
 
 cat >> boot/grub/grub.cfg <<GRUB
 
 menuentry "MAJIX OS - Sesion temporal (sin guardar)" {
     linux /live/vmlinuz ${temporary_options} nopersistence findiso=\${iso_path}
+    initrd /live/initrd.img
+}
+menuentry "MAJIX OS - Graficos seguros" {
+    linux /live/vmlinuz ${LB_BOOTAPPEND_LIVE} nomodeset plymouth.enable=0 findiso=\${iso_path}
     initrd /live/initrd.img
 }
 GRUB

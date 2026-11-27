@@ -8,9 +8,9 @@ on:
       - config/**
       - bin/**
       - developer/**
-      - tests/check-storage.sh
+      - packaging/**
+      - tests/**
       - branding/plymouth/**
-      - tests/check-boot-logo.py
       - .github/workflows/live.yml
   workflow_dispatch:
 
@@ -24,9 +24,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check Studio syntax
-        run: python3 -m py_compile developer/majix-studio
+        run: python3 -m py_compile developer/majix-studio developer/majix-control
       - name: Test storage mode detection
         run: sh tests/check-storage.sh
+      - name: Verify APT signatures and payloads
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends apt-utils gnupg
+          sh tests/check-apt-archive.sh
       - name: Build with Debian 13 live-build
         run: |
           mkdir -p "$RUNNER_TEMP/majix"
@@ -43,7 +48,7 @@ jobs:
         run: |
           sha256sum -c SHA256SUMS
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xorriso qemu-system-x86 initramfs-tools-core
+          sudo apt-get install -y --no-install-recommends xorriso qemu-system-x86 initramfs-tools-core e2fsprogs
           xorriso -indev majix-os-0.1-alpha-amd64.iso -report_el_torito plain > boot-report.txt
           cat boot-report.txt
           grep -E 'El Torito boot img .*BIOS' boot-report.txt
@@ -55,6 +60,7 @@ jobs:
             grep -F 'Sesion temporal (sin guardar)' "$menu"
             grep -m 1 -E '^[[:space:]]+(append|linux)[[:space:]].*boot=live' "$menu" \
               | grep -F 'persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA'
+            grep -F 'nomodeset plymouth.enable=0' "$menu" | grep -F 'persistence-label=MAJIX_DATA'
             grep -F 'nopersistence' "$menu" | grep -vF 'persistence-encryption='
           done
       - name: Boot the live system in QEMU
@@ -93,17 +99,24 @@ jobs:
           done
           tail -100 boot.log
           exit 1
+      - name: Verify persistence across two boots
+        working-directory: ${{ runner.temp }}/majix
+        run: |
+          python3 "$GITHUB_WORKSPACE/tests/check-persistence-qemu.py" \
+            majix-os-0.1-alpha-amd64.iso boot/vmlinuz-* boot/initrd.img-*
       - name: Check the MAJIX logo during boot in QEMU
         id: boot_logo
         continue-on-error: true
         run: python3 tests/check-boot-logo.py "$RUNNER_TEMP/majix/majix-os-0.1-alpha-amd64.iso" "$RUNNER_TEMP/majix/boot-logo.ppm"
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
           name: majix-os-0.1-alpha-amd64
           path: |
             ${{ runner.temp }}/majix/majix-os-0.1-alpha-amd64.iso
             ${{ runner.temp }}/majix/SHA256SUMS
             ${{ runner.temp }}/majix/boot-report.txt
+            ${{ runner.temp }}/majix/boot.log
             ${{ runner.temp }}/majix/boot-logo.ppm
             ${{ runner.temp }}/majix/last-boot-frame.ppm
           compression-level: 0

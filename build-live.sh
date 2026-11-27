@@ -41,10 +41,15 @@ mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
 cat > config/package-lists/majix.list.chroot <<'PACKAGES'
 kde-plasma-desktop
 kinfocenter
+kdialog
+systemd-zram-generator
 python3-pyqt6
 python3-venv
 git
 build-essential
+cmake
+ninja-build
+gdb
 nodejs
 ripgrep
 kwin-wayland
@@ -63,6 +68,18 @@ plasma-pa
 locales
 sudo
 PACKAGES
+
+mkdir -p config/includes.chroot/etc/systemd/journald.conf.d
+cat > config/includes.chroot/etc/systemd/zram-generator.conf <<'ZRAM'
+[zram0]
+zram-size = min(ram / 2, 4096)
+swap-priority = 100
+ZRAM
+cat > config/includes.chroot/etc/systemd/journald.conf.d/50-majix-limits.conf <<'JOURNAL'
+[Journal]
+SystemMaxUse=64M
+RuntimeMaxUse=32M
+JOURNAL
 
 cat > config/includes.chroot/etc/skel/.config/kdeglobals <<'KDE'
 [General]
@@ -138,20 +155,17 @@ install -m 0755 "$source_dir/config/persistence-menu.hook.binary" \
     config/hooks/live/9010-majix-persistence.hook.binary
 printf '%s\n' 'CRYPTSETUP=y' > config/includes.chroot/etc/cryptsetup-initramfs/conf-hook
 
-install -D -m 0755 "$source_dir/bin/majix-storage" \
-    config/includes.chroot/usr/local/bin/majix-storage
-
-developer="$source_dir/developer"
+# Install the same package used by the update channel so dpkg tracks ownership.
 live=config/includes.chroot
-install -D -m 0755 "$developer/majix-studio" "$live/usr/local/bin/majix-studio"
-install -D -m 0755 "$developer/majix-session" "$live/usr/local/bin/majix-session"
-install -D -m 0644 "$developer/majix-studio.desktop" "$live/usr/share/applications/majix-studio.desktop"
-install -D -m 0644 "$developer/majix-session.desktop" "$live/etc/xdg/autostart/majix-session.desktop"
-install -D -m 0644 "$developer/kcm-about-distrorc" "$live/etc/xdg/kcm-about-distrorc"
-install -D -m 0644 "$developer/wallpaper.jpg" "$live/usr/share/majix/wallpaper.jpg"
-install -D -m 0644 "$source_dir/branding/plymouth/watermark.png" "$live/usr/share/majix/emblem.png"
-install -D -m 0644 "$source_dir/branding/plymouth/watermark.png" \
-    "$live/usr/share/icons/hicolor/128x128/apps/majix-os.png"
+mkdir -p "$live/usr/share/majix/build"
+"$source_dir/packaging/build-components.sh" "$live/usr/share/majix/build" "${MAJIX_COMPONENT_VERSION:-0.1.0~alpha1}"
+cat > config/hooks/live/8990-majix-components.hook.chroot <<'COMPONENTS'
+#!/bin/sh
+set -eu
+dpkg --install /usr/share/majix/build/majix-desktop_*.deb
+rm -- /usr/share/majix/build/majix-desktop_*.deb
+COMPONENTS
+chmod +x config/hooks/live/8990-majix-components.hook.chroot
 
 lb build
 image=majix-os-0.1-alpha-amd64.hybrid.iso

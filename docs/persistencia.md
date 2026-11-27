@@ -14,3 +14,5 @@ La carpeta de proyectos y las carpetas que creas para copiar archivos son indepe
 En una partición ext4 vacía y dedicada al almacenamiento, usa la etiqueta `MAJIX_DATA`. Crea `persistence.conf` en la raíz con la línea `/ union` y crea la carpeta `MAJIXProjects` con permisos de escritura para el usuario Live `majix` (UID 1000). Para comprobar el perfil, ejecuta `majix-storage` en Konsole. Guarda un archivo, apaga el sistema y comprueba que reaparece al arrancar.
 
 [Opciones de Debian Live](https://manpages.debian.org/trixie/live-boot-doc/live-boot.7.en.html)
+
+En la rama de desarrollo, **Gráficos seguros** conserva las opciones de persistencia y arranca con `nomodeset` y Plymouth desactivado. El diagnóstico `majix-storage --require-full` devuelve un error si no confirma una raíz persistente escribible. Para pasos de diagnóstico y copias, consulta la [guía de recuperación](portable-foundation.md#recuperación).

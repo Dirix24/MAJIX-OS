@@ -1,0 +1,51 @@
+#!/bin/sh
+set -eu
+
+catalog=$(cat <<'CATALOG'
+essential|MAJIX Essential|build-essential git python3 python3-venv nodejs ripgrep cmake ninja-build gdb
+developer|MAJIX Developer|clang rustc golang-go neovim shellcheck
+electronics|MAJIX Electronics|kicad ngspice sigrok-cli minicom
+robotics|MAJIX Robotics|python3-opencv python3-serial
+embedded|MAJIX Embedded|openocd esptool avrdude gcc-arm-none-eabi
+fpga|MAJIX FPGA|yosys verilator gtkwave iverilog ghdl
+ai|MAJIX Artificial Intelligence|jupyterlab python3-numpy python3-pandas python3-scipy python3-sklearn
+industrial|MAJIX Industrial|mosquitto-clients mbpoll
+engineering|MAJIX Engineering|freecad blender openscad
+devops|MAJIX DevOps|podman qemu-system-x86 ansible openssh-client
+science|MAJIX Science|octave r-base python3-sympy
+CATALOG
+)
+case "$#:${1:-}" in
+    1:list)
+        printf '%s\n' "$catalog" | cut -d '|' -f 1,2
+        printf '%s\n' 'full|MAJIX Full Technology'
+        exit 0
+        ;;
+    2:preview|2:install) ;;
+    *) printf '%s\n' 'Uso: majix-tools list | preview PERFIL | install PERFIL' >&2; exit 2 ;;
+esac
+
+if [ "$2" = full ]; then
+    packages=$(printf '%s\n' "$catalog" | cut -d '|' -f 3)
+else
+    packages=$(printf '%s\n' "$catalog" | awk -F '|' -v id="$2" '$1 == id { print $3 }')
+fi
+if [ -z "$packages" ]; then
+    printf '%s\n' 'Perfil desconocido. Ejecuta majix-tools list.' >&2
+    exit 2
+fi
+
+operation=$1
+# The package tokens come only from the built-in catalogue.
+set -f
+set -- $packages
+if [ "$operation" = preview ]; then
+    exec apt-get --simulate --no-remove install "$@"
+fi
+
+majix-storage --require-full
+if [ ! -t 0 ]; then
+    printf '%s\n' 'La instalación requiere confirmación en un terminal.' >&2
+    exit 1
+fi
+exec sudo apt-get -o APT::Get::Assume-Yes=false --no-remove install "$@"

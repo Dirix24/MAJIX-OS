@@ -2,7 +2,11 @@
 
 <img src="developer/wallpaper.jpg" alt="Emblema hexagonal de MAJIX OS con una M neón cian y violeta" width="420">
 
-**MAJIX OS Developer 0.1 Alpha** es una estación de desarrollo portátil para equipos AMD64. Arranca desde una ISO o una memoria USB y reúne un escritorio en español, herramientas de programación y una aplicación para decidir dónde guardar cada proyecto.
+**MAJIX OS Developer 0.1 Alpha** · **Portable Technology OS**
+
+**Programa. Diseña. Investiga. Construye.**
+
+MAJIX OS es una estación de desarrollo portátil para equipos AMD64. Arranca desde una ISO o una memoria USB y reúne un escritorio en español, herramientas de programación y una aplicación para decidir dónde guardar cada proyecto.
 
 El proyecto toma de **Tails** la idea de llevar el sistema en un USB y de **Fedora Workstation** y **Pop!_OS** la atención al escritorio de trabajo. De **Kali Linux** toma la idea de reunir herramientas para un propósito concreto. Aquí el foco es la programación y el trabajo tecnológico. La base es **Debian 13**, con sus paquetes y el gestor APT.
 
@@ -16,12 +20,20 @@ El proyecto toma de **Tails** la idea de llevar el sistema en un USB y de **Fedo
 | Sistema | NetworkManager para la red, PipeWire para el sonido y Plymouth para la animación de arranque. |
 | Proyectos | **MAJIX Studio** crea proyectos y copia varios archivos al destino que elijas. |
 
+## Qué hay en el código actual
+
+- Centro de control con versión, procesador, memoria, espacio libre, temperaturas y persistencia. Los perfiles tecnológicos abren Konsole para revisar y confirmar la instalación mediante APT.
+- Studio abre proyectos existentes y realiza las operaciones de guardado en segundo plano.
+- ZRAM dimensionada según la memoria y límites de uso del registro del sistema.
+- Paquete DEB de aplicaciones MAJIX, canales APT firmados y un comando de actualización de componentes. La [guía de desarrollo y recuperación](docs/portable-foundation.md) explica la configuración pendiente y las pruebas.
+
 ## Descargar y arrancar
 
-1. Descarga el [ZIP de la compilación portátil verificada](https://github.com/Dirix24/MAJIX-OS/actions/runs/45872060122/artifacts/15144755154). Las compilaciones posteriores estarán en [GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml).
+1. Abre el [flujo de compilación en GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml), selecciona una ejecución exitosa de `main` y descarga el artefacto `majix-os-0.1-alpha-amd64`. La página de la ejecución indica el commit exacto de la imagen.
 2. Extrae el ZIP y ejecuta `sha256sum -c SHA256SUMS` en la carpeta extraída para verificar la ISO.
 3. Para una primera prueba, monta la ISO como unidad óptica en una máquina virtual AMD64 y selecciona **Live system**. Para usar la alfa en UEFI, Secure Boot debe estar desactivado.
-4. Si usas el USB preparado con las particiones `MAJIXUSB` y `MAJIX_DATA`, arranca desde ese medio y selecciona el modo de guardado del menú. La [guía de persistencia](docs/persistencia.md) explica cómo preparar la partición de datos.
+4. Grabar la ISO en el disco USB completo sustituye la tabla de particiones y los datos anteriores. Guarda una copia de `MAJIX_DATA` en otro disco si quieres conservar su contenido. Una ISO recién grabada requiere un volumen de persistencia preparado para guardar cambios.
+5. Si usas el USB preparado con las particiones `MAJIXUSB` y `MAJIX_DATA`, arranca desde ese medio. El modo predeterminado intenta activar la persistencia. La [guía de persistencia](docs/persistencia.md) explica cómo preparar la partición de datos.
 
 ## Guardar proyectos con MAJIX Studio
 
@@ -36,11 +48,11 @@ Abre **MAJIX Studio** desde el lanzador. Escribe un nombre de carpeta, seleccion
 
 - **Guardado completo.** Con `MAJIX_DATA` preparada y `/ union` en `persistence.conf`, el modo predeterminado conserva archivos, ajustes y paquetes instalados durante la sesión.
 - **Sesión temporal.** Los cambios del sistema se descartan al reiniciar. Los archivos que hayas guardado explícitamente en `MAJIXProjects` o en otra unidad escribible se conservan.
-- **ISO sin volumen persistente.** La sesión usa almacenamiento temporal. Abre Konsole y ejecuta `majix-storage` para comprobar el estado antes de guardar trabajo importante.
+- **ISO sin volumen persistente.** La sesión usa almacenamiento temporal. Plasma muestra una advertencia en cada inicio de sesión sin persistencia completa. Consulta el estado con MAJIX Control Center o `majix-storage`.
 
 El USB portátil preparado inicia sesión automáticamente y su partición ext4 funciona sin contraseña. **Los datos de esa partición quedan sin cifrar.** [Guía de almacenamiento](docs/persistencia.md)
 
-## Estado y hoja de ruta
+## Resultados históricos de la alfa
 
 | Comprobación | Estado |
 | --- | --- |

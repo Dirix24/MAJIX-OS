@@ -1,0 +1,43 @@
+#!/bin/sh
+set -eu
+
+source=/etc/apt/sources.list.d/majix.sources
+case "${1:-check}" in
+    check|refresh|apply) ;;
+    *) printf '%s\n' 'Uso: majix-update [check|refresh|apply]' >&2; exit 2 ;;
+esac
+if [ "$#" -gt 1 ]; then exit 2; fi
+if [ ! -r "$source" ]; then
+    printf '%s\n' 'Configura un canal MAJIX firmado en /etc/apt/sources.list.d/majix.sources.' >&2
+    exit 1
+fi
+
+case "${1:-check}" in
+    check)
+        apt-cache -o "Dir::Etc::sourcelist=$source" -o Dir::Etc::sourceparts=- policy majix-desktop
+        ;;
+    refresh)
+        exec sudo apt-get -o "Dir::Etc::sourcelist=$source" -o Dir::Etc::sourceparts=- \
+            -o APT::Get::List-Cleanup=false -o APT::Update::Error-Mode=any update
+        ;;
+    apply)
+        majix-storage --require-full
+        if [ ! -t 0 ]; then
+            printf '%s\n' 'Abre un terminal interactivo para confirmar la actualización.' >&2
+            exit 1
+        fi
+        installed=$(dpkg-query -W -f='${Version}' majix-desktop)
+        candidate=$(LC_ALL=C apt-cache -o "Dir::Etc::sourcelist=$source" -o Dir::Etc::sourceparts=- \
+            policy majix-desktop | LC_ALL=C awk '/^[[:space:]]*Candidate:/ {print $2; exit}')
+        if [ -z "$candidate" ] || [ "$candidate" = '(none)' ] ||
+            ! dpkg --compare-versions "$candidate" gt "$installed"; then
+            printf '%s\n' 'El canal MAJIX no ofrece una versión más reciente.'
+            exit 0
+        fi
+        printf 'MAJIX Desktop %s → %s\nAplicar esta actualización [s/N] ' "$installed" "$candidate"
+        read -r answer
+        case "$answer" in s|S) ;; *) exit 0 ;; esac
+        exec sudo apt-get -o "Dir::Etc::sourcelist=$source" -o Dir::Etc::sourceparts=- \
+            -o APT::Get::Assume-Yes=false --only-upgrade --no-remove install "majix-desktop=$candidate"
+        ;;
+esac

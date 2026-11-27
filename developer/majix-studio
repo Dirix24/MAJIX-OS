@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 
-from PyQt6.QtCore import QUrl
+from PyQt6.QtCore import QThread, QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import (
     QApplication, QComboBox, QFileDialog, QFormLayout, QHBoxLayout, QLabel,
@@ -33,7 +33,7 @@ def devices():
         text=True, capture_output=True, check=False,
     ).stdout.strip()
     disks = json.loads(output(
-        ["lsblk", "-J", "-p", "-o", "NAME,TYPE,TRAN,RM,RO,LABEL,UUID,FSTYPE,MOUNTPOINTS"]
+        ["lsblk", "-J", "-p", "-o", "NAME,TYPE,TRAN,RM,RO,LABEL,UUID,MAJ:MIN,FSTYPE,MOUNTPOINTS"]
     ))["blockdevices"]
     for disk in disks:
         if disk["ro"] or not (disk["tran"] == "usb" or disk["rm"]):
@@ -110,6 +110,30 @@ def copy_batch(destination, name, sources):
     return write_folder(destination, name, populate)
 
 
+class WriteOperation(QThread):
+    saved = pyqtSignal(str)
+    failed = pyqtSignal(str)
+
+    def __init__(self, device, name, action, parent):
+        super().__init__(parent)
+        self.identity = (device["name"], device["uuid"], device["maj:min"])
+        self.name = name
+        self.action = action
+
+    def run(self):
+        try:
+            current = next(((is_boot, item) for is_boot, item in devices()
+                            if (item["name"], item["uuid"], item["maj:min"]) == self.identity), None)
+            if current is None:
+                raise OSError("La unidad cambió. Actualiza la lista y vuelve a elegirla.")
+            boot_disk, device = current
+            target = self.action(mount_destination(device, boot_disk), self.name)
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            self.failed.emit(str(error))
+        else:
+            self.saved.emit(str(target))
+
+
 class Studio(QWidget):
     def __init__(self):
         super().__init__()
@@ -133,6 +157,8 @@ class Studio(QWidget):
         fields.addRow("Plantilla", self.language)
         fields.addRow("Destino", self.destination)
         layout.addLayout(fields)
+        self.operation = None
+        self.write_buttons = []
         actions = QHBoxLayout()
         for label, action in (
             ("Crear proyecto", self.project), ("Copiar varios archivos", self.transfer),
@@ -141,12 +167,16 @@ class Studio(QWidget):
             button = QPushButton(label)
             button.clicked.connect(action)
             actions.addWidget(button)
+            self.write_buttons.append(button)
         layout.addLayout(actions)
         tools = QHBoxLayout()
         for text, command in (("Terminal", "konsole"), ("Editor", "kate"), ("Archivos", "dolphin")):
             button = QPushButton(text)
             button.clicked.connect(lambda checked=False, cmd=command: self.launch(cmd))
             tools.addWidget(button)
+        open_button = QPushButton("Abrir proyecto")
+        open_button.clicked.connect(self.open_project)
+        tools.addWidget(open_button)
         layout.addLayout(tools)
         self.status = QLabel()
         self.status.setWordWrap(True)
@@ -175,26 +205,47 @@ class Studio(QWidget):
         self.status.setText("Conecta una unidad y actualiza la lista si no ves el destino.")
 
     def run_action(self, action):
-        try:
-            device = self.destination.currentData()
-            if not device:
-                raise ValueError("Elige una unidad de destino.")
-            # Recheck after a hot unplug before trying to mount or write.
-            identity = (device["name"], device["uuid"])
-            current = next(((is_boot, item) for is_boot, item in devices()
-                            if (item["name"], item["uuid"]) == identity), None)
-            if current is None:
-                raise OSError("La unidad cambió. Actualiza la lista y vuelve a elegirla.")
-            boot_disk, device = current
-            target = action(mount_destination(device, boot_disk), self.name.text().strip())
-        except (OSError, ValueError, subprocess.CalledProcessError) as error:
-            QMessageBox.warning(self, "MAJIX Studio", str(error))
+        device = self.destination.currentData()
+        if not device:
+            QMessageBox.warning(self, "MAJIX Studio", "Elige una unidad de destino.")
             return
+        self.operation = WriteOperation(device, self.name.text().strip(), action, self)
+        self.operation.saved.connect(self.show_saved)
+        self.operation.failed.connect(self.show_error)
+        self.operation.finished.connect(self.finish_operation)
+        for button in self.write_buttons:
+            button.setEnabled(False)
+        self.status.setText("Guardando en la unidad seleccionada…")
+        self.operation.start()
+
+    def show_saved(self, target):
         self.status.setText(f"Guardado en {target}")
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(target)))
+        QDesktopServices.openUrl(QUrl.fromLocalFile(target))
+
+    def show_error(self, message):
+        self.status.setText("No se pudo completar el guardado.")
+        QMessageBox.warning(self, "MAJIX Studio", message)
+
+    def finish_operation(self):
+        self.operation.deleteLater()
+        self.operation = None
+        for button in self.write_buttons:
+            button.setEnabled(True)
+
+    def closeEvent(self, event):
+        if self.operation is not None:
+            event.ignore()
+        else:
+            super().closeEvent(event)
 
     def project(self):
-        self.run_action(lambda destination, name: create_project(destination, name, self.language.currentText()))
+        language = self.language.currentText()
+        self.run_action(lambda destination, name: create_project(destination, name, language))
+
+    def open_project(self):
+        folder = QFileDialog.getExistingDirectory(self, "Abrir carpeta de proyecto")
+        if folder:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(folder))
 
     def transfer(self):
         paths, _ = QFileDialog.getOpenFileNames(self, "Elige los archivos para copiar")

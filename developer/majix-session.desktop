@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
 Name=Inicio de MAJIX Studio
-Exec=/usr/local/bin/majix-session
+Exec=majix-session
 OnlyShowIn=KDE;
 NoDisplay=true

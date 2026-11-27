@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=MAJIX Control Center
+Comment=Consultar el estado del sistema y la persistencia
+Exec=majix-control
+Icon=majix-os
+Terminal=false
+Categories=System;Monitor;

@@ -1,0 +1,53 @@
+name: MAJIX desktop packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        options: [developer, beta, stable]
+        required: true
+      version:
+        type: string
+        required: true
+        description: Debian package version (for example 0.1.1~dev1)
+
+permissions:
+  contents: read
+
+jobs:
+  stage-archive:
+    runs-on: ubuntu-24.04
+    environment: majix-${{ inputs.channel }}
+    env:
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check and build
+        run: |
+          sh tests/check-storage.sh
+          python3 -m py_compile developer/majix-control developer/majix-studio
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends apt-utils gnupg
+          mkdir -p "$RUNNER_TEMP/archive/pool/main"
+          packaging/build-components.sh "$RUNNER_TEMP/archive/pool/main" "$VERSION"
+      - name: Sign repository
+        env:
+          SIGNING_KEY: ${{ secrets.MAJIX_APT_SIGNING_KEY }}
+          FINGERPRINT: ${{ vars.MAJIX_APT_SIGNING_FINGERPRINT }}
+        run: |
+          export GNUPGHOME
+          GNUPGHOME=$(mktemp -d)
+          trap 'rm -rf -- "$GNUPGHOME"' EXIT
+          printf '%s' "$SIGNING_KEY" | gpg --batch --import
+          packaging/sign-archive.sh "$RUNNER_TEMP/archive" "$CHANNEL" "$FINGERPRINT"
+          gpg --batch --export "$FINGERPRINT" > "$RUNNER_TEMP/majix-archive-keyring.gpg"
+          gpgv --keyring "$RUNNER_TEMP/majix-archive-keyring.gpg" "$RUNNER_TEMP/archive/dists/$CHANNEL/InRelease"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: majix-apt-${{ inputs.channel }}
+          path: |
+            ${{ runner.temp }}/archive/
+            ${{ runner.temp }}/majix-archive-keyring.gpg
+          if-no-files-found: error

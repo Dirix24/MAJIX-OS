@@ -1,47 +1,80 @@
 #!/bin/sh
 set -eu
 
-# Debian Live can stack the persistent union over its initial tmpfs-backed root.
-root_options=$(findmnt --target / --noheadings --first-only --output FS-OPTIONS) || root_options=
-case ",$root_options," in
-    *,upperdir=/run/live/persistence/*/rw,*)
-        printf '%s\n' 'Persistencia completa activa: los cambios del sistema se guardan en el USB.'
-        exit 0
+require_full=false
+case "$#:${1:-}" in
+    0:) ;;
+    1:--require-full) require_full=true ;;
+    *) printf '%s\n' 'Uso: majix-storage [--require-full]' >&2; exit 2 ;;
+esac
+
+mount_info() {
+    findmnt --mountpoint "$1" --noheadings --raw --output MAJ:MIN,FSTYPE,VFS-OPTIONS
+}
+
+full() {
+    printf '%s\n' 'Persistencia completa activa: los cambios del sistema se guardan en el USB.'
+    exit 0
+}
+
+incomplete() {
+    printf '%s\n' "$1"
+    if "$require_full"; then exit 1; fi
+    exit 0
+}
+
+# Check the backing mount as well as the root upperdir. A stale path or a
+# read-only remount must not be reported as working persistence.
+root_options=$(findmnt --target / --noheadings --first-only --output VFS-OPTIONS,FS-OPTIONS) || root_options=
+case "$root_options" in
+    rw\ *|rw,*)
+        fs_options=${root_options#* }
+        case ",$fs_options," in
+            *,upperdir=/run/live/persistence/*/rw,*)
+                upper=${fs_options#*upperdir=}
+                backing=${upper%%,*}
+                backing=${backing%/rw}
+                info=$(mount_info "$backing") || info=
+                case "$info" in
+                    *' ext4 rw'|*' ext4 rw,'*) full ;;
+                esac
+                printf '%s\n' 'La capa persistente del sistema no está disponible en modo escritura.'
+                exit 1
+                ;;
+        esac
         ;;
 esac
 
-# Some Live profiles mount the backing device directly at the overlay path.
-overlay=$(findmnt --mountpoint /run/live/overlay --noheadings --output FSTYPE,VFS-OPTIONS) || {
+overlay=$(mount_info /run/live/overlay) || {
     printf '%s\n' 'No se detectó una sesión Live de MAJIX OS.'
     exit 1
 }
-set -- $overlay
-case "${1:-}:${2:-}" in
-    ext4:rw|ext4:rw,*)
-        printf '%s\n' 'Persistencia completa activa: los cambios del sistema se guardan en el USB.'
-        exit 0
+case "$overlay" in
+    *' ext4 rw'|*' ext4 rw,'*)
+        case "$root_options" in
+            rw\ *|rw,*)
+                case ",${root_options#* }," in
+                    *,upperdir=/run/live/overlay/rw,*) full ;;
+                esac
+                ;;
+        esac
         ;;
-    tmpfs:rw|tmpfs:rw,*) ;;
-    *)
-        printf '%s\n' 'No se pudo confirmar una capa de almacenamiento Live escribible.'
-        exit 1
-        ;;
-esac
-
-# A persistent home is a bind mount from a volume under /run/live/persistence.
-home=$(findmnt --mountpoint /home/majix --noheadings --output MAJ:MIN,FSTYPE,VFS-OPTIONS) || home=
-set -- $home
-case "${2:-}:${3:-}" in
-    ext4:rw|ext4:rw,*)
-        if findmnt --list --noheadings --raw --output MAJ:MIN,TARGET |
-            awk -v device="$1" '$1 == device && $2 ~ /^\/run\/live\/persistence\/[^/]+$/ { found = 1 } END { exit !found }'
-        then
-            printf '%s\n' 'Persistencia personal activa: solo se guarda la carpeta /home/majix.'
-            exit 0
-        fi
-        printf '%s\n' 'La carpeta personal tiene un montaje cuyo origen persistente no se pudo confirmar.'
-        exit 1
+    *' tmpfs rw'|*' tmpfs rw,'*)
+        home=$(mount_info /home/majix) || home=
+        case "$home" in
+            *' ext4 rw'|*' ext4 rw,'*)
+                if findmnt --list --noheadings --raw --output MAJ:MIN,TARGET |
+                    awk -v device="${home%% *}" '$1 == device && $2 ~ /^\/run\/live\/persistence\/[^/]+$/ { found = 1 } END { exit !found }'
+                then
+                    incomplete 'Persistencia personal activa: solo se guarda la carpeta /home/majix.'
+                fi
+                printf '%s\n' 'La carpeta personal tiene un montaje cuyo origen persistente no se pudo confirmar.'
+                exit 1
+                ;;
+        esac
+        incomplete 'Sesión temporal: los cambios de la sesión se pierden al reiniciar.'
         ;;
 esac
 
-printf '%s\n' 'Sesión temporal: los cambios de la sesión se pierden al reiniciar.'
+printf '%s\n' 'No se pudo confirmar una capa de almacenamiento Live escribible.'
+exit 1
