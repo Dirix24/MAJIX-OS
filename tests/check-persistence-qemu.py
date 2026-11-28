@@ -45,7 +45,7 @@ grep -Fx installed /usr/share/majix/ci-fixture
 """
 
 
-def boot(iso, kernel, initrd, usb, script):
+def boot(iso, kernel, initrd, usb, script, *, require_shutdown=True):
     # A root debug shell is enabled only via this test VM's kernel command line.
     args = [
         "qemu-system-x86_64", "-machine", "accel=kvm:tcg", "-m", "3072", "-smp", "2",
@@ -76,6 +76,11 @@ def boot(iso, kernel, initrd, usb, script):
                     if not chunk:
                         break
                     log.extend(chunk)
+                    # The first guest must shut down cleanly before the next
+                    # boot. The last guest only verifies a disposable image.
+                    if sent and not require_shutdown and b"MAJIX_CI_OK" in log:
+                        print(log.decode(errors="replace"))
+                        return
                     if not sent and b"# " in log:
                         vm.stdin.write(command.encode())
                         vm.stdin.flush()
@@ -99,7 +104,7 @@ def main(iso, kernel, initrd):
             image.truncate(512 * 1024**2)
         subprocess.run(["mke2fs", "-q", "-t", "ext4", "-L", "MAJIX_DATA", "-d", root, disk], check=True)
         boot(iso, kernel, initrd, disk, WRITE)
-        boot(iso, kernel, initrd, disk, VERIFY)
+        boot(iso, kernel, initrd, disk, VERIFY, require_shutdown=False)
 
 
 if __name__ == "__main__":
