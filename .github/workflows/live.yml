@@ -35,12 +35,12 @@ jobs:
       - name: Build with Debian 13 live-build
         run: |
           mkdir -p "$RUNNER_TEMP/majix"
-          docker run --rm --privileged \
+          docker run --rm --privileged --env "MAJIX_BUILD_SHA=$GITHUB_SHA" \
             --mount "type=bind,source=$PWD,target=/src,readonly" \
             --mount "type=bind,source=$RUNNER_TEMP,target=/out" \
             debian:13-slim bash -ec '
               apt-get update
-              DEBIAN_FRONTEND=noninteractive apt-get install -y live-build ca-certificates rsync
+              DEBIAN_FRONTEND=noninteractive apt-get install -y live-build ca-certificates rsync python3
               bash /src/build-live.sh /out/majix
             '
       - name: Verify checksum and BIOS/UEFI boot entries

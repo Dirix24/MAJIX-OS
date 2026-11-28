@@ -36,3 +36,34 @@ menuentry "MAJIX OS - Graficos seguros" {
     initrd /live/initrd.img
 }
 GRUB
+
+# Both BIOS and UEFI use the MAJIX menu names and keep the troubleshooting entries.
+sed -i 's/\^Live system (amd64)/^Iniciar MAJIX OS/; s/Live system (amd64 fail-safe mode)/MAJIX OS - Diagnostico avanzado/' isolinux/live.cfg
+sed -i 's/^menu title .*/menu title MAJIX OS/' isolinux/menu.cfg
+sed -i '/^menu background /d' isolinux/stdmenu.cfg
+sed -i 's/Live system (amd64)/Iniciar MAJIX OS/; s/Live system (amd64 fail-safe mode)/MAJIX OS - Diagnostico avanzado/; s/Utilities\.\.\./Utilidades/' boot/grub/grub.cfg
+cat > boot/grub/theme.cfg <<'GRUB_THEME'
+set theme=/boot/grub/majix-theme.txt
+export theme
+GRUB_THEME
+cat > boot/grub/majix-theme.txt <<'THEME'
+title-text: "MAJIX OS"
+title-color: "#6EF6EE"
+desktop-color: "#0B151F"
++ image {
+    file = "majix-emblem.png"
+    left = 40%
+    top = 12%
+}
++ boot_menu {
+    left = 16%
+    top = 54%
+    width = 70%
+    height = 37%
+    item_color = "#B1CFDA"
+    selected_item_color = "#6EF6EE"
+    item_height = 23
+    item_spacing = 5
+    item_padding = 4
+}
+THEME

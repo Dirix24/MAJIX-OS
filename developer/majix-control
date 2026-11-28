@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtWidgets import (
     QApplication, QComboBox, QFormLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
@@ -70,31 +70,98 @@ class ControlCenter(QWidget):
         refresh = QPushButton("Actualizar estado")
         refresh.clicked.connect(self.refresh)
         layout.addWidget(refresh)
-        profiles = command("majix-tools", "list")
-        if profiles:
-            self.profile = QComboBox()
-            for line in profiles.splitlines():
-                identifier, name = line.split("|", 1)
-                self.profile.addItem(name, identifier)
-            form.addRow("Perfil tecnológico", self.profile)
-            install = QPushButton("Revisar e instalar en Konsole")
-            install.clicked.connect(self.install_profile)
-            layout.addWidget(install)
+        self.profile = QComboBox()
+        self.tools = QComboBox()
+        for line in command("majix-tools", "list").splitlines():
+            identifier, name = line.split("|", 1)
+            self.profile.addItem(name, identifier)
+            if identifier not in {"universal", "full"}:
+                self.tools.addItem(name, identifier)
+        self.active = QLabel()
+        form.addRow("Modo activo", self.active)
+        form.addRow("Elegir modo", self.profile)
+        self.description = QLabel()
+        self.description.setWordWrap(True)
+        form.addRow(self.description)
+        self.tools_label = QLabel("Herramientas de Tec Universal")
+        form.addRow(self.tools_label, self.tools)
+        save = QPushButton("Guardar modo")
+        save.clicked.connect(self.save_profile)
+        layout.addWidget(save)
+        self.install = QPushButton("Revisar e instalar en Konsole")
+        self.install.clicked.connect(self.install_profile)
+        layout.addWidget(self.install)
+        self.profile.currentIndexChanged.connect(self.describe_profile)
+        self.profile.setCurrentIndex(max(0, self.profile.findData(command("majix-tools", "active"))))
+        self.describe_profile()
+        self.show_active()
+
+        self.update = QPushButton("Buscar una compilación de MAJIX")
+        self.update.clicked.connect(self.check_update)
+        self.check = QProcess(self)
+        self.check.finished.connect(self.show_update)
+        self.check.errorOccurred.connect(lambda _: self.update.setEnabled(True))
+        layout.addWidget(self.update)
         layout.addStretch()
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.refresh)
         self.timer.start(30000)
 
+    def describe_profile(self):
+        identifier = self.profile.currentData()
+        if identifier:
+            self.description.setText(command("majix-tools", "describe", identifier))
+        self.tools.setVisible(identifier == "universal")
+        self.tools_label.setVisible(identifier == "universal")
+
+    def show_active(self):
+        index = self.profile.findData(command("majix-tools", "active"))
+        self.active.setText(self.profile.itemText(index) if index >= 0 else "Sin confirmar")
+
+    def save_profile(self):
+        identifier = self.profile.currentData()
+        if not identifier:
+            return
+        if identifier == "full":
+            self.install_profile()
+            return
+        result = subprocess.run(["majix-tools", "select", identifier], text=True, capture_output=True)
+        if result.returncode:
+            QMessageBox.warning(self, "Modo tecnológico", result.stdout.strip() or result.stderr.strip())
+        self.show_active()
+
     def install_profile(self):
+        identifier = self.profile.currentData()
+        if identifier == "universal":
+            if command("majix-tools", "active") != "universal":
+                self.save_profile()
+                if command("majix-tools", "active") != "universal":
+                    return
+            identifier = self.tools.currentData()
+        if not identifier:
+            return
         try:
-            subprocess.Popen(["konsole", "--hold", "-e", "majix-tools", "install",
-                              self.profile.currentData()])
+            subprocess.Popen(["konsole", "--hold", "-e", "majix-tools", "install", identifier])
         except OSError as error:
             QMessageBox.warning(self, "MAJIX Control Center", f"No se pudo abrir Konsole. {error}")
+
+    def check_update(self):
+        self.update.setEnabled(False)
+        self.check.start("majix-build-check", [])
+
+    def show_update(self):
+        self.update.setEnabled(True)
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Actualizaciones de MAJIX")
+        dialog.setTextFormat(Qt.TextFormat.PlainText)
+        dialog.setText(bytes(self.check.readAllStandardOutput()).decode().strip()
+                       or "No se pudo consultar GitHub.")
+        dialog.exec()
 
     def refresh(self):
         for name, value in snapshot().items():
             self.labels[name].setText(value)
+        self.show_active()
 
 
 def main():

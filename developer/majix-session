@@ -6,11 +6,19 @@ if ! storage=$(majix-storage --require-full); then
 Guarda el trabajo importante en una unidad escribible. Para diagnosticar el arranque, abre Konsole y ejecuta majix-storage y lsblk -f." || true
 fi
 
+(sleep 75; majix-build-check --notify) </dev/null >/dev/null 2>&1 &
+
 state=${XDG_CONFIG_HOME:-"$HOME/.config"}/majix
 mkdir -p "$state"
 [ ! -f "$state/developer-desktop" ] || exit 0
 if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
     plasma-apply-wallpaperimage /usr/share/majix/wallpaper.jpg || true
 fi
-touch "$state/developer-desktop"
-exec majix-studio
+layout=$(cat /usr/share/majix/layout.js)
+for attempt in 1 2 3 4 5; do
+    if /usr/lib/qt6/bin/qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$layout"; then
+        touch "$state/developer-desktop"
+        break
+    fi
+    sleep 2
+done

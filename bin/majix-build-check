@@ -1,0 +1,75 @@
+#!/usr/bin/python3
+"""Check GitHub for a newer, tested MAJIX USB image."""
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+from urllib.request import Request, urlopen
+
+API = "https://api.github.com/repos/Dirix24/MAJIX-OS"
+ARTIFACT = "majix-os-0.1-alpha-amd64"
+SHA = re.compile(r"[0-9a-f]{40}")
+
+
+def github(path):
+    request = Request(API + path, headers={"Accept": "application/vnd.github+json",
+                                          "User-Agent": "MAJIX-OS"})
+    with urlopen(request, timeout=8) as response:
+        return json.load(response)
+
+
+def available(installed):
+    result = github("/actions/workflows/live.yml/runs?branch=main&status=success&per_page=5")
+    for run in result["workflow_runs"]:
+        candidate = run["head_sha"]
+        if not SHA.fullmatch(candidate):
+            continue
+        if installed == candidate:
+            return None, "Ya tienes la última imagen verificada de MAJIX OS."
+        comparison = github(f"/compare/{installed}...{candidate}?per_page=12")
+        if comparison["status"] != "ahead":
+            continue
+        artifacts = github(f"/actions/runs/{int(run['id'])}/artifacts")["artifacts"]
+        if not any(item["name"] == ARTIFACT and not item["expired"] for item in artifacts):
+            continue
+        titles = [commit["commit"]["message"].splitlines()[0]
+                  for commit in comparison["commits"] if commit["commit"]["message"]]
+        lines = ["Actualización disponible para el USB"]
+        lines.extend(f"• {title[:140]}" for title in titles)
+        if comparison["ahead_by"] > len(titles):
+            lines.append("Consulta la ejecución para ver el resto de los cambios.")
+        lines.append(f"https://github.com/Dirix24/MAJIX-OS/actions/runs/{int(run['id'])}")
+        return candidate, "\n".join(lines)
+    return None, "Aún no hay una imagen posterior verificada y disponible para este USB."
+
+
+def main():
+    try:
+        installed = Path("/usr/lib/majix-build").read_text().strip()
+        if not SHA.fullmatch(installed):
+            print("Esta imagen no identifica su commit de compilación.")
+            return 1
+        candidate, message = available(installed)
+        if sys.argv[1:] == ["--notify"] and candidate:
+            cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "majix"
+            cache.mkdir(parents=True, exist_ok=True)
+            marker = cache / f"build-{candidate}"
+            if not marker.exists():
+                from html import escape
+                notice = subprocess.run(["notify-send", "-a", "MAJIX OS", "-i", "majix-os",
+                                         "Actualización disponible", escape(message)[:600]], check=False)
+                if notice.returncode == 0:
+                    marker.touch()
+        elif not sys.argv[1:]:
+            print(message)
+    except (OSError, ValueError, KeyError, TypeError):
+        if not sys.argv[1:]:
+            print("No se pudo consultar GitHub. Vuelve a intentarlo con una conexión activa.")
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

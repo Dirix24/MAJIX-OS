@@ -2,29 +2,64 @@
 set -eu
 
 catalog=$(cat <<'CATALOG'
-essential|MAJIX Essential|build-essential git python3 python3-venv nodejs ripgrep cmake ninja-build gdb
-developer|MAJIX Developer|clang rustc golang-go neovim shellcheck
-electronics|MAJIX Electronics|kicad ngspice sigrok-cli minicom
-robotics|MAJIX Robotics|python3-opencv python3-serial
-embedded|MAJIX Embedded|openocd esptool avrdude gcc-arm-none-eabi
-fpga|MAJIX FPGA|yosys verilator gtkwave iverilog ghdl
-ai|MAJIX Artificial Intelligence|jupyterlab python3-numpy python3-pandas python3-scipy python3-sklearn
-industrial|MAJIX Industrial|mosquitto-clients mbpoll
-engineering|MAJIX Engineering|freecad blender openscad
-devops|MAJIX DevOps|podman qemu-system-x86 ansible openssh-client
-science|MAJIX Science|octave r-base python3-sympy
+essential|MAJIX Essential|build-essential git python3 python3-venv nodejs ripgrep cmake ninja-build gdb|Compilación, Python, JavaScript y Git para empezar.
+developer|MAJIX Developer|clang rustc golang-go neovim shellcheck|Lenguajes, editores y revisión de scripts.
+electronics|MAJIX Electronics|kicad ngspice sigrok-cli minicom|Diseño y simulación de circuitos, señales y consola serie.
+robotics|MAJIX Robotics|python3-opencv python3-serial|Visión artificial y comunicación serie de robots.
+embedded|MAJIX Embedded|openocd esptool avrdude gcc-arm-none-eabi|Programación y depuración de placas ARM, ESP y AVR desde el PC.
+fpga|MAJIX FPGA|yosys verilator gtkwave iverilog ghdl|Diseño, síntesis y simulación de lógica digital.
+ai|MAJIX Artificial Intelligence|jupyterlab python3-numpy python3-pandas python3-scipy python3-sklearn|Cuadernos y análisis de datos local.
+industrial|MAJIX Industrial|mosquitto-clients mbpoll|Clientes MQTT y Modbus para automatización.
+engineering|MAJIX Engineering|freecad blender openscad|Diseño CAD, modelado y piezas paramétricas.
+devops|MAJIX DevOps|podman qemu-system-x86 ansible openssh-client|Contenedores, máquinas virtuales y administración.
+science|MAJIX Science|octave r-base python3-sympy|Cálculo numérico, estadística y álgebra simbólica.
 CATALOG
 )
+state=${XDG_CONFIG_HOME:-"$HOME/.config"}/majix
+catalog="$catalog
+universal|MAJIX Tec Universal||Reúne todas las áreas. Instala las herramientas que necesites por disciplina, cuando las necesites.
+full|MAJIX Full Technology||Instala el catálogo completo. APT muestra el tamaño y pide confirmación."
 case "$#:${1:-}" in
     1:list)
         printf '%s\n' "$catalog" | cut -d '|' -f 1,2
-        printf '%s\n' 'full|MAJIX Full Technology'
         exit 0
         ;;
-    2:preview|2:install) ;;
-    *) printf '%s\n' 'Uso: majix-tools list | preview PERFIL | install PERFIL' >&2; exit 2 ;;
+    1:active)
+        if [ -r "$state/profile" ]; then cat "$state/profile"; else printf '%s\n' essential; fi
+        exit 0
+        ;;
+    2:describe|2:select|2:preview|2:install) ;;
+    *) printf '%s\n' 'Uso: majix-tools list | active | describe PERFIL | select PERFIL | preview PERFIL | install PERFIL' >&2; exit 2 ;;
 esac
 
+profile=$2
+description=$(printf '%s\n' "$catalog" | awk -F '|' -v id="$profile" '$1 == id { print $4 }')
+if [ -z "$description" ]; then
+    printf '%s\n' 'Perfil desconocido. Ejecuta majix-tools list.' >&2
+    exit 2
+fi
+if [ "$1" = describe ]; then
+    printf '%s\n' "$description"
+    exit 0
+fi
+
+save_profile() (
+    mkdir -p -- "$state"
+    temporary=$(mktemp "$state/.profile.XXXXXXXX")
+    trap 'rm -f -- "$temporary"' EXIT
+    printf '%s\n' "$profile" > "$temporary"
+    mv -T -- "$temporary" "$state/profile"
+)
+
+if [ "$1" = select ]; then
+    majix-storage --require-full
+    save_profile
+    exit 0
+fi
+if [ "$profile" = universal ]; then
+    printf '%s\n' 'En Tec Universal, instala herramientas por disciplina desde el Centro de control.'
+    exit 0
+fi
 if [ "$2" = full ]; then
     packages=$(printf '%s\n' "$catalog" | cut -d '|' -f 3)
 else
@@ -48,4 +83,10 @@ if [ ! -t 0 ]; then
     printf '%s\n' 'La instalación requiere confirmación en un terminal.' >&2
     exit 1
 fi
-exec sudo apt-get -o APT::Get::Assume-Yes=false --no-remove install "$@"
+sudo apt-get -o APT::Get::Assume-Yes=false --no-remove install "$@"
+case "$profile" in
+    full) save_profile ;;
+    *)
+        if [ "$(majix-tools active)" != universal ]; then save_profile; fi
+        ;;
+esac

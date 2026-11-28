@@ -2,7 +2,7 @@
 
 <img src="developer/wallpaper.jpg" alt="Emblema hexagonal de MAJIX OS con una M neón cian y violeta" width="420">
 
-**MAJIX OS Developer 0.1 Alpha** · **Portable Technology OS**
+**MAJIX OS 0.1 Alpha 2** · **Portable Technology OS**
 
 **Programa. Diseña. Investiga. Construye.**
 
@@ -27,11 +27,22 @@ El proyecto toma de **Tails** la idea de llevar el sistema en un USB y de **Fedo
 - ZRAM dimensionada según la memoria y límites de uso del registro del sistema.
 - Paquete DEB de aplicaciones MAJIX, canales APT firmados y un comando de actualización de componentes. La [guía de desarrollo y recuperación](docs/portable-foundation.md) explica la configuración pendiente y las pruebas.
 
+## Escritorio y modos tecnológicos
+
+El teclado inicial es español de España (PC105, variante Windows). El escritorio de estreno tiene una barra de estado translúcida arriba y un panel inferior centrado con los programas. El fondo de MAJIX sigue siendo el mismo. El menú de arranque y la animación Plymouth usan el emblema de MAJIX.
+
+- **Tec Universal** guarda un modo de trabajo común. Selecciona Electrónica, Robótica, Sistemas embebidos u otra disciplina desde ese mismo modo e instala sus herramientas cuando te hagan falta. Los paquetes se guardan en `MAJIX_DATA`.
+- **Full Technology** solicita instalar el catálogo completo y queda activo al finalizar. Revisa el espacio que indica APT. Un USB de 8 GB puede no tener espacio para el catálogo entero.
+- **Electrónica** ofrece diseño y simulación de circuitos y acceso serie. **Sistemas embebidos** programa y depura microcontroladores desde el PC. Las descripciones de los demás modos aparecen al elegirlos en el Centro de control.
+- **Buscar una compilación de MAJIX** consulta GitHub y resume los commits de la última imagen posterior que haya pasado CI y esté disponible. Una notificación avisa después de iniciar sesión si hay una nueva. El reemplazo de la imagen USB sigue siendo manual.
+
+La imagen arranca en PC y mini PC **x86-64** con USB arrancable. Las herramientas permiten trabajar con placas Arduino, ESP y ARM desde ese equipo. Raspberry Pi y otras placas que usen ARM requieren una imagen distinta para arrancar MAJIX.
+
 ## Descargar y arrancar
 
 1. Abre el [flujo de compilación en GitHub Actions](https://github.com/Dirix24/MAJIX-OS/actions/workflows/live.yml), selecciona una ejecución exitosa de `main` y descarga el artefacto `majix-os-0.1-alpha-amd64`. La página de la ejecución indica el commit exacto de la imagen.
 2. Extrae el ZIP y ejecuta `sha256sum -c SHA256SUMS` en la carpeta extraída para verificar la ISO.
-3. Para una primera prueba, monta la ISO como unidad óptica en una máquina virtual AMD64 y selecciona **Live system**. Para usar la alfa en UEFI, Secure Boot debe estar desactivado.
+3. Para una primera prueba, monta la ISO como unidad óptica en una máquina virtual AMD64 y selecciona **Iniciar MAJIX OS**. Para usar la alfa en UEFI, Secure Boot debe estar desactivado.
 4. Grabar la ISO en el disco USB completo sustituye la tabla de particiones y los datos anteriores. Guarda una copia de `MAJIX_DATA` en otro disco si quieres conservar su contenido. Una ISO recién grabada requiere un volumen de persistencia preparado para guardar cambios.
 5. Si usas el USB preparado con las particiones `MAJIXUSB` y `MAJIX_DATA`, arranca desde ese medio. El modo predeterminado intenta activar la persistencia. La [guía de persistencia](docs/persistencia.md) explica cómo preparar la partición de datos.
 
@@ -70,7 +81,7 @@ Desde la raíz del repositorio, en Debian 13 AMD64:
 
 ```bash
 sudo apt-get update
-sudo apt-get install live-build ca-certificates rsync
+sudo apt-get install live-build ca-certificates rsync python3
 sudo bash build-live.sh dist
 ```
 
