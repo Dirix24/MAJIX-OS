@@ -1,0 +1,9 @@
+{
+  "logo": {
+    "type": "file",
+    "source": "/usr/share/majix/fastfetch-logo.txt",
+    "color": {"1": "cyan"},
+    "padding": {"right": 3}
+  },
+  "modules": ["os", "host", "kernel", "uptime", "de", "terminal", "cpu", "gpu", "memory", "disk"]
+}

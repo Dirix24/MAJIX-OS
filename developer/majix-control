@@ -96,6 +96,14 @@ class ControlCenter(QWidget):
         self.describe_profile()
         self.show_active()
 
+        keyboard = QPushButton("Configurar la distribución del teclado")
+        keyboard.clicked.connect(self.open_keyboard_settings)
+        layout.addWidget(keyboard)
+
+        diagnostic = QPushButton("Medir arranque y almacenamiento")
+        diagnostic.clicked.connect(self.open_diagnostic)
+        layout.addWidget(diagnostic)
+
         self.update = QPushButton("Buscar una compilación de MAJIX")
         self.update.clicked.connect(self.check_update)
         self.check = QProcess(self)
@@ -144,6 +152,18 @@ class ControlCenter(QWidget):
             subprocess.Popen(["konsole", "--hold", "-e", "majix-tools", "install", identifier])
         except OSError as error:
             QMessageBox.warning(self, "MAJIX Control Center", f"No se pudo abrir Konsole. {error}")
+
+    def open_keyboard_settings(self):
+        try:
+            subprocess.Popen(["systemsettings", "kcm_keyboard"])
+        except OSError as error:
+            QMessageBox.warning(self, "Teclado", f"No se pudo abrir la configuración. {error}")
+
+    def open_diagnostic(self):
+        try:
+            subprocess.Popen(["konsole", "--hold", "-e", "majix-diagnostico"])
+        except OSError as error:
+            QMessageBox.warning(self, "Diagnóstico", f"No se pudo abrir Konsole. {error}")
 
     def check_update(self):
         self.update.setEnabled(False)

@@ -40,7 +40,7 @@ jobs:
             --mount "type=bind,source=$RUNNER_TEMP,target=/out" \
             debian:13-slim bash -ec '
               apt-get update
-              DEBIAN_FRONTEND=noninteractive apt-get install -y live-build ca-certificates rsync python3
+              DEBIAN_FRONTEND=noninteractive apt-get install -y live-build ca-certificates rsync python3 python3-pil
               bash /src/build-live.sh /out/majix
             '
       - name: Verify checksum and BIOS/UEFI boot entries
@@ -61,6 +61,9 @@ jobs:
             grep -m 1 -E '^[[:space:]]+(append|linux)[[:space:]].*boot=live' "$menu" \
               | grep -F 'persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA'
             grep -F 'nomodeset plymouth.enable=0' "$menu" | grep -F 'persistence-label=MAJIX_DATA'
+            grep -F 'USB compatible' "$menu"
+            grep -m 1 -E '^[[:space:]]+(append|linux)[[:space:]].*boot=live' "$menu" \
+              | grep -F 'noeject zswap.enabled=0 quickusbmodules'
             grep -F 'nopersistence' "$menu" | grep -vF 'persistence-encryption='
           done
       - name: Boot the live system in QEMU
@@ -86,7 +89,7 @@ jobs:
             -cdrom majix-os-0.1-alpha-amd64.iso -display none -monitor none \
             -serial file:boot.log -no-reboot \
             -kernel "${kernels[0]}" -initrd "${initrds[0]}" \
-            -append 'boot=live components hostname=majix username=majix locales=en_US.UTF-8 nox11autologin persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA console=ttyS0' &
+            -append 'boot=live components hostname=majix username=majix locales=en_US.UTF-8 nox11autologin noeject zswap.enabled=0 quickusbmodules persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA console=ttyS0' &
           vm=$!
           trap 'kill "$vm" 2>/dev/null || true' EXIT
           for ((attempt = 0; attempt < 90; attempt++)); do

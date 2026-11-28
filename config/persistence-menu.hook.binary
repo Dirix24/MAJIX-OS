@@ -5,6 +5,7 @@ set -eu
 persistence_options="persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA"
 temporary_options="${LB_BOOTAPPEND_LIVE%" $persistence_options"}"
 test "$temporary_options" != "$LB_BOOTAPPEND_LIVE"
+compatible_options=$(printf '%s\n' "$LB_BOOTAPPEND_LIVE" | sed 's/ quickusbmodules / /')
 
 test -s isolinux/live.cfg
 test -s boot/grub/grub.cfg
@@ -23,6 +24,11 @@ label majix-safe-graphics
     linux /live/vmlinuz
     initrd /live/initrd.img
     append ${LB_BOOTAPPEND_LIVE} nomodeset plymouth.enable=0
+label majix-compatible
+    menu label MAJIX OS - USB compatible
+    linux /live/vmlinuz
+    initrd /live/initrd.img
+    append ${compatible_options}
 SYSLINUX
 
 cat >> boot/grub/grub.cfg <<GRUB
@@ -33,6 +39,10 @@ menuentry "MAJIX OS - Sesion temporal (sin guardar)" {
 }
 menuentry "MAJIX OS - Graficos seguros" {
     linux /live/vmlinuz ${LB_BOOTAPPEND_LIVE} nomodeset plymouth.enable=0 findiso=\${iso_path}
+    initrd /live/initrd.img
+}
+menuentry "MAJIX OS - USB compatible" {
+    linux /live/vmlinuz ${compatible_options} findiso=\${iso_path}
     initrd /live/initrd.img
 }
 GRUB
@@ -67,3 +77,8 @@ desktop-color: "#0B151F"
     item_padding = 4
 }
 THEME
+
+cat >> boot/grub/grub.cfg <<'TIMEOUT'
+set timeout_style=menu
+set timeout=4
+TIMEOUT

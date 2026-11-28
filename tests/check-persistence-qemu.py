@@ -13,7 +13,7 @@ PASSWORD_HASH = subprocess.check_output(
 ).strip()
 BOOT = (
     "boot=live components hostname=majix username=majix locales=en_US.UTF-8 "
-    "nox11autologin persistence persistence-media=removable-usb "
+    "nox11autologin noeject zswap.enabled=0 quickusbmodules persistence persistence-media=removable-usb "
     "persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA "
     "systemd.unit=multi-user.target systemd.debug_shell=ttyS0 "
     "systemd.mask=serial-getty@ttyS0.service"

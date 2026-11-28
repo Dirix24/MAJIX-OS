@@ -31,7 +31,7 @@ lb config \
     --iso-application 'MAJIX OS 0.1 Alpha' \
     --checksums sha256 \
     --chroot-squashfs-compression-type zstd \
-    --bootappend-live 'boot=live components quiet splash hostname=majix username=majix locales=es_ES.UTF-8 keyboard-layouts=es keyboard-variants=winkeys nox11autologin persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA'
+    --bootappend-live 'boot=live components quiet splash hostname=majix username=majix locales=es_ES.UTF-8 keyboard-model=pc105 keyboard-layouts=es keyboard-variants=winkeys nox11autologin noeject zswap.enabled=0 quickusbmodules persistence persistence-media=removable-usb persistence-storage=filesystem persistence-encryption=none persistence-label=MAJIX_DATA'
 
 mkdir -p config/package-lists config/includes.chroot/etc/skel/.config \
     config/includes.chroot/etc/sddm.conf.d config/includes.chroot/usr/lib \
@@ -42,6 +42,7 @@ cat > config/package-lists/majix.list.chroot <<'PACKAGES'
 kde-plasma-desktop
 kinfocenter
 kdialog
+fastfetch
 qdbus-qt6
 libnotify-bin
 ca-certificates
@@ -101,11 +102,16 @@ cat > "$live/etc/skel/.config/baloofilerc" <<'KDE'
 [Basic Settings]
 Indexing-Enabled=false
 KDE
+cat > "$live/etc/skel/.config/ksplashrc" <<'KDE'
+[KSplash]
+Engine=none
+Theme=None
+KDE
 cat > "$live/etc/skel/.config/kwinrc" <<'KDE'
 [Plugins]
 blurEnabled=false
 KDE
-sed -i '/^\[KDE\]$/a AnimationDurationFactor=0.65' "$live/etc/skel/.config/kdeglobals"
+sed -i '/^\[KDE\]$/a AnimationDurationFactor=0.45' "$live/etc/skel/.config/kdeglobals"
 
 cat > config/includes.chroot/etc/sddm.conf.d/50-majix-live.conf <<'SDDM'
 [Autologin]
@@ -116,7 +122,7 @@ SDDM
 # Install alongside Debian's release metadata to keep package detection intact.
 cat > config/includes.chroot/usr/lib/majix-release <<'RELEASE'
 NAME="MAJIX OS"
-PRETTY_NAME="MAJIX OS 0.1 Alpha 2"
+PRETTY_NAME="MAJIX OS 0.1 Alpha 3"
 ID=majix
 ID_LIKE=debian
 VERSION_ID="0.1"
@@ -132,7 +138,7 @@ RELEASE
 install -m 0644 "$source_dir/branding/plymouth/"{majix.plymouth,watermark.png} \
     config/includes.chroot/usr/share/plymouth/themes/majix/
 
-python3 "$source_dir/branding/plymouth/make-halo.py" config/includes.chroot/usr/share/plymouth/themes/majix
+python3 "$source_dir/branding/plymouth/animate-majix.py" config/includes.chroot/usr/share/plymouth/themes/majix
 
 cat > config/includes.chroot/etc/initramfs-tools/hooks/majix-logo <<'INITRAMFS'
 #!/bin/sh
@@ -162,7 +168,7 @@ for image in "$themes/spinner/"*.png; do
 done
 
 # Load the virtual display drivers early enough for the graphical splash in QEMU.
-printf '\nvirtio_gpu\nbochs\n' >> /etc/initramfs-tools/modules
+printf '\nvirtio_gpu\nbochs\nusb_storage\nuas\n' >> /etc/initramfs-tools/modules
 rm -f /etc/os-release
 ln -s ../usr/lib/majix-release /etc/os-release
 plymouth-set-default-theme majix
@@ -173,12 +179,14 @@ chmod +x config/hooks/live/9000-majix-plymouth.hook.chroot
 install -m 0755 "$source_dir/config/persistence-menu.hook.binary" \
     config/hooks/live/9010-majix-persistence.hook.binary
 printf '%s\n' 'CRYPTSETUP=y' > config/includes.chroot/etc/cryptsetup-initramfs/conf-hook
+mkdir -p "$live/etc/live"
+printf '%s\n' 'LIVE_MEDIUM_EJECT_VERBOSE=false' > "$live/etc/live/tools.conf"
 
 # Install the same package used by the update channel so dpkg tracks ownership.
 live=config/includes.chroot
 install -D -m 0644 "$source_dir/developer/kcm-about-distrorc" "$live/etc/xdg/kcm-about-distrorc"
 mkdir -p "$live/usr/share/majix/build"
-"$source_dir/packaging/build-components.sh" "$live/usr/share/majix/build" "${MAJIX_COMPONENT_VERSION:-0.1.0~alpha2}"
+"$source_dir/packaging/build-components.sh" "$live/usr/share/majix/build" "${MAJIX_COMPONENT_VERSION:-0.1.0~alpha3}"
 cat > config/hooks/live/8990-majix-components.hook.chroot <<'COMPONENTS'
 #!/bin/sh
 set -eu

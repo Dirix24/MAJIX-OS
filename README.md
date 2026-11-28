@@ -2,7 +2,7 @@
 
 <img src="developer/wallpaper.jpg" alt="Emblema hexagonal de MAJIX OS con una M neón cian y violeta" width="420">
 
-**MAJIX OS 0.1 Alpha 2** · **Portable Technology OS**
+**MAJIX OS 0.1 Alpha 3** · **Portable Technology OS**
 
 **Programa. Diseña. Investiga. Construye.**
 
@@ -37,6 +37,16 @@ El teclado inicial es español de España (PC105, variante Windows). El escritor
 - **Buscar una compilación de MAJIX** consulta GitHub y resume los commits de la última imagen posterior que haya pasado CI y esté disponible. Una notificación avisa después de iniciar sesión si hay una nueva. El reemplazo de la imagen USB sigue siendo manual.
 
 La imagen arranca en PC y mini PC **x86-64** con USB arrancable. Las herramientas permiten trabajar con placas Arduino, ESP y ARM desde ese equipo. Raspberry Pi y otras placas que usen ARM requieren una imagen distinta para arrancar MAJIX.
+
+### Arranque, teclado y diagnóstico
+
+- La M pulsa mientras Plymouth acompaña el arranque real. La bienvenida de KDE queda deshabilitada.
+- El modo normal evita la espera fija de sondeo USB de Debian Live y la pausa de expulsión al apagar. **MAJIX OS - USB compatible** conserva el sondeo completo para dispositivos que tardan en responder.
+- Escribe `fastfetch` en Konsole para ver la M y los datos del sistema. El Centro de control ofrece un acceso a la configuración del teclado. La sesión inicial usa PC105 español de España, variante Windows.
+- Ejecuta `majix-diagnostico` para medir el arranque y consultar el medio y ZRAM sin hacer pruebas de escritura sobre el USB.
+- Tec Universal incluye **Seguridad defensiva** bajo demanda. Ofrece auditoría local, verificación de paquetes, análisis de archivos y utilidades AppArmor.
+
+Fuentes consultadas y decisiones de integración en [el manifiesto upstream](docs/upstream.json).
 
 ## Descargar y arrancar
 
@@ -81,7 +91,7 @@ Desde la raíz del repositorio, en Debian 13 AMD64:
 
 ```bash
 sudo apt-get update
-sudo apt-get install live-build ca-certificates rsync python3
+sudo apt-get install live-build ca-certificates rsync python3 python3-pil
 sudo bash build-live.sh dist
 ```
 

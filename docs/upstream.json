@@ -1,0 +1,73 @@
+{
+  "reviewed": "2026-11-28",
+  "sources": [
+    {
+      "name": "Debian Live",
+      "url": "https://salsa.debian.org/live-team/live-build",
+      "type": "git",
+      "package_version_reviewed": "20250505+deb13u1",
+      "commit": null,
+      "distribution": "Debian 13 trixie",
+      "architectures_used": ["amd64"],
+      "status": "Base integrada por paquetes Debian",
+      "integration": "live-build, live-boot, live-config y live-tools; argumentos quickusbmodules y noeject"
+    },
+    {
+      "name": "LUO-MAX",
+      "url": "https://github.com/Dirix24/LUO-MAX",
+      "type": "git",
+      "commit": "907f8d062b5c738ab89b431a5ca231e7c4eb3c63",
+      "license": "MIT",
+      "status": "Ideas adaptadas; código externo pendiente de empaquetado",
+      "integration": "Diagnóstico de arranque y recursos de solo lectura en MAJIX mediante systemd-analyze y utilidades Debian"
+    },
+    {
+      "name": "Ruist OS",
+      "url": "https://github.com/Dirix24/Ruist-os",
+      "type": "git",
+      "commit": "c6b4f6bcd1c11869a9320676183f233ed79583a7",
+      "license": "GPL-3.0",
+      "status": "Configuración adaptada",
+      "integration": "Conservar ZRAM como compresión de intercambio en memoria, con zswap desactivado en el arranque Live"
+    },
+    {
+      "name": "Fastfetch",
+      "url": "https://github.com/fastfetch-cli/fastfetch",
+      "type": "git",
+      "commit": null,
+      "package_version_reviewed": "2.40.4+dfsg-1",
+      "status": "Integrado por paquete Debian",
+      "integration": "Configuración XDG y logotipo de texto MAJIX"
+    },
+    {
+      "name": "COSMIC",
+      "url": "https://github.com/pop-os/cosmic-epoch",
+      "type": "git",
+      "commit": null,
+      "status": "Referencia de UX; integración pendiente",
+      "integration": "Mantener la configuración nativa de Plasma para paneles y lanzadores"
+    },
+    {
+      "name": "Kali Live",
+      "url": "https://gitlab.com/kalilinux/build-scripts/live-build-config",
+      "type": "git",
+      "commit": null,
+      "status": "Referencia de modularidad; integración pendiente",
+      "integration": "Perfiles independientes mediante paquetes Debian"
+    },
+    {
+      "name": "Tails",
+      "url": "https://gitlab.tails.boum.org/tails/tails",
+      "type": "git",
+      "commit": null,
+      "status": "Referencia de portabilidad; evaluación de cifrado pendiente"
+    },
+    {
+      "name": "pi-gen",
+      "url": "https://github.com/RPi-Distro/pi-gen",
+      "type": "git",
+      "commit": null,
+      "status": "Imagen ARM separada pendiente de evaluación"
+    }
+  ]
+}

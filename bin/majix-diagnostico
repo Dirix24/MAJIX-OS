@@ -1,0 +1,15 @@
+#!/bin/sh
+# Report boot and storage measurements without changing tuning or stressing the USB.
+printf '%s\n' '=== Tiempo de arranque ==='
+systemd-analyze time 2>/dev/null || printf '%s\n' 'Sin medición disponible.'
+printf '\n%s\n' '=== Servicios con mayor tiempo de inicio ==='
+systemd-analyze blame --no-pager 2>/dev/null | head -n 8
+printf '\n%s\n' '=== Memoria y memoria comprimida ==='
+free -h
+swapon --show=NAME,SIZE,USED,PRIO
+printf '\n%s\n' '=== Medio Live y persistencia ==='
+medium=$(findmnt -nro SOURCE --mountpoint /run/live/medium)
+if [ -b "$medium" ]; then
+    lsblk -s -o NAME,TRAN,ROTA,SIZE,MODEL -- "$medium"
+fi
+majix-storage

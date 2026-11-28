@@ -12,6 +12,7 @@ ai|MAJIX Artificial Intelligence|jupyterlab python3-numpy python3-pandas python3
 industrial|MAJIX Industrial|mosquitto-clients mbpoll|Clientes MQTT y Modbus para automatización.
 engineering|MAJIX Engineering|freecad blender openscad|Diseño CAD, modelado y piezas paramétricas.
 devops|MAJIX DevOps|podman qemu-system-x86 ansible openssh-client|Contenedores, máquinas virtuales y administración.
+security|MAJIX Seguridad defensiva|lynis debsums yara apparmor-utils|Auditoría local, comprobación de paquetes, análisis de archivos y perfiles AppArmor.
 science|MAJIX Science|octave r-base python3-sympy|Cálculo numérico, estadística y álgebra simbólica.
 CATALOG
 )
